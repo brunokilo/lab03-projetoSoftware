@@ -2,7 +2,7 @@
 
 ---
 
-# 🏷️ Nome do Projeto 👨‍💻
+# 🏷️ Sistema de Moeda Estudantil 👨‍💻
 
 > [!NOTE]
 > Breve descrição do projeto. **Foque no principal valor/benefício.**  
