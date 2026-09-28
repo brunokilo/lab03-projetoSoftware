@@ -1,0 +1,15 @@
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+
+actor "Usuário" as Usuario
+actor  Aluno
+actor  Professor
+actor "Instituição" as Instituicao
+actor "Sistema de email" as Sistema_de_email
+actor Empresas
+
+rectangle "Sistema de Moeda Estudantil" {
+
+}
+@enduml
