@@ -12,8 +12,15 @@ actor Empresas
 rectangle "Sistema de Moeda Estudantil" {
     usecase "Gerenciar login" as UC01 
     usecase "Selecionar instituição" as UC02 
+    usecase "Selecionar vantagem" as UC02 
     usecase "Enviar moedas" as UC03 
     usecase "Notificar Aluno" as UC04 
     usecase "Trocar Moedas" as UC05
+    usecase "Informar motivo do envio de moedas" as UC06
+    usecase "Consultar extrato da conta" as UC07
+    usecase "Consultar extrato da conta" as UC08
+    usecase "Cadastrar conta" as UC09
+    usecase "Cadastrar vantagens" as UC10
+    usecase "Resgatar vantagens" as UC11
 }
 @enduml
