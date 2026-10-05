@@ -1,0 +1,27 @@
+@startuml
+hide circle
+hide methods
+
+entity "Usuário" as Usuario {
+  * id : uuid <<PK>>
+  --
+  *senha : varchar(255)
+  *nome : varchar(120)
+  *email : varchar(255)
+
+}
+entity Aluno {
+  * id : uuid <<PK>>
+  --
+  * cpf : char(64) <<UQ>>
+  * rg : char(64)
+  * curso : varchar(120)
+}
+entity Professor{
+  * id : uuid <<PK>>
+  --
+  * cpf : char(64) <<UQ>>
+  *departamento : varchar(255)
+  * saldo:  numeric(10,2)
+}
+@enduml
