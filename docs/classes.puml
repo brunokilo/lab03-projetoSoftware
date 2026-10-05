@@ -1,0 +1,100 @@
+@startuml
+
+abstract class Usuario {
+  - id: Long
+  - email: String
+  - senha: String
+  - nome: String
+  + autenticar(email: String, senha: String): boolean
+}
+
+class InstituicaoEnsino {
+  - id: Long
+  - nome: String
+}
+
+class ContaMoedas {
+  - id: Long
+  - saldo: int
+  + creditar(valor: int): void
+  + debitar(valor: int): void
+  + possuiSaldo(valor: int): boolean
+  + consultarExtrato(): List<Transacao>
+}
+
+class Aluno {
+  - cpf: String
+  - rg: String
+  - curso: String
+  + consultarExtrato(): List<Transacao>
+  + resgatarVantagem(vantagem: Vantagem): Resgate
+}
+
+class Professor {
+  - {static} CREDITO_SEMESTRAL: int = 1000
+  - cpf: String
+  - departamento: String
+  + receberCreditoSemestral(): void
+  + enviarMoedas(aluno: Aluno, valor: int, motivo: String): TransacaoEnvio
+  + consultarExtrato(): List<Transacao>
+}
+
+class Empresa {
+  + cadastrarVantagem(vantagem: Vantagem): void
+}
+
+class Endereco {
+  - rua: String
+  - numero: String
+  - complemento: String
+  - bairro: String
+  - cidade: String
+  - estado: String
+  - cep: String
+}
+
+class Vantagem {
+  - id: Long
+  - descricao: String
+  - foto: String
+  - custoMoedas: int
+  - ativa: boolean
+}
+
+abstract class Transacao {
+  - id: Long
+  - dataHora: LocalDateTime
+  - valor: int
+}
+
+class TransacaoEnvio {
+  - motivo: String
+}
+
+class Resgate {
+  - codigoCupom: String
+}
+
+Usuario <|-- Aluno
+Usuario <|-- Professor
+Usuario <|-- Empresa
+
+Transacao <|-- TransacaoEnvio
+Transacao <|-- Resgate
+
+Aluno "*" --> "1" InstituicaoEnsino : estuda em
+Professor "*" --> "1" InstituicaoEnsino : vinculado a
+Aluno *-- "1" Endereco
+
+Aluno "1" *-- "1" ContaMoedas
+Professor "1" *-- "1" ContaMoedas
+ContaMoedas "1" o-- "*" Transacao
+
+TransacaoEnvio "*" --> "1" Professor : remetente
+TransacaoEnvio "*" --> "1" Aluno : destinatário
+
+Resgate "*" --> "1" Aluno : realizado por
+Resgate "*" --> "1" Vantagem : resgata
+
+Empresa "1" o-- "*" Vantagem : oferece
+@enduml
