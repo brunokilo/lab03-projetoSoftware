@@ -1,0 +1,125 @@
+@startuml MoedaEstudantil_Componentes
+
+skinparam shadowing false
+skinparam componentStyle uml2
+skinparam linetype ortho
+skinparam defaultTextAlignment center
+skinparam nodesep 60
+skinparam ranksep 80
+skinparam component {
+  BackgroundColor #FEFEFE
+  BorderColor #333333
+}
+skinparam interface {
+  BackgroundColor #FEFEFE
+  BorderColor #333333
+}
+skinparam package {
+  BackgroundColor #F7F7F7
+  BorderColor #999999
+}
+skinparam database {
+  BackgroundColor #FEFEFE
+  BorderColor #333333
+}
+
+actor "Usuário\n(Aluno, Professor, Empresa)" as Usuario
+
+node "Navegador do Usuário" as Estacao {
+  [Aplicação React] as Spa
+}
+
+node "Servidor Node.js" as Servidor {
+
+  package "Camada de Entrada" as Entrada {
+    [Controlador de acesso\n] as Porteiro
+    [Controlador de Acesso] as CtrlAcesso
+    [Controlador de Aluno] as CtrlAluno
+    [Controlador de Professor] as CtrlProfessor
+    [Controlador de Empresa] as CtrlEmpresa
+    [Controlador de Vantagem] as CtrlVantagem
+  }
+
+  package "Camada de Regras" as Regras {
+    interface "ServicoAcesso" as IServicoAcesso
+    interface "ServicoAluno" as IServicoAluno
+    interface "ServicoProfessor" as IServicoProfessor
+    interface "ServicoEmpresa" as IServicoEmpresa
+    interface "ServicoVantagem" as IServicoVantagem
+
+    [Gestor de Acesso] as GestorAcesso
+    [Gestor de Aluno] as GestorAluno
+    [Gestor de Professor] as GestorProfessor
+    [Gestor de Empresa] as GestorEmpresa
+    [Gestor de Vantagem] as GestorVantagem
+    [Gestor de Conta de Moedas] as GestorConta
+    [Gestor de Aviso] as GestorAviso
+  }
+
+  package "Camada de Dados" as Dados {
+    [Usuários] as PersistUsuario
+    [Instituições] as PersistInstituicao
+    [Contas de Moedas] as PersistConta
+    [Transações] as PersistTransacao
+    [Vantagens] as PersistVantagem
+  }
+}
+
+database "PostgreSQL\n(banco: moeda_estudantil)" as Bd
+
+interface "HTTP / REST" as IHttp
+interface "DB driver" as ISql
+
+
+Usuario --> Spa
+Spa --( IHttp
+IHttp -- Porteiro
+
+
+Porteiro --> CtrlAcesso
+Porteiro --> CtrlAluno
+Porteiro --> CtrlProfessor
+Porteiro --> CtrlEmpresa
+Porteiro --> CtrlVantagem
+
+
+IServicoAcesso - GestorAcesso
+IServicoAluno - GestorAluno
+IServicoProfessor - GestorProfessor
+IServicoEmpresa - GestorEmpresa
+IServicoVantagem - GestorVantagem
+
+
+CtrlAcesso --( IServicoAcesso
+CtrlAluno --( IServicoAluno
+CtrlProfessor --( IServicoProfessor
+CtrlEmpresa --( IServicoEmpresa
+CtrlVantagem --( IServicoVantagem
+
+GestorAluno ..> GestorConta
+GestorAluno ..> GestorVantagem
+GestorAluno ..> GestorAviso
+GestorProfessor ..> GestorConta
+GestorProfessor ..> GestorAviso
+GestorEmpresa ..> GestorVantagem
+
+
+GestorAcesso ..> PersistUsuario
+GestorAluno ..> PersistUsuario
+GestorAluno ..> PersistInstituicao
+GestorProfessor ..> PersistUsuario
+GestorProfessor ..> PersistInstituicao
+GestorEmpresa ..> PersistUsuario
+GestorVantagem ..> PersistVantagem
+GestorConta ..> PersistConta
+GestorConta ..> PersistTransacao
+
+
+PersistUsuario ..> ISql
+PersistInstituicao ..> ISql
+PersistConta ..> ISql
+PersistTransacao ..> ISql
+PersistVantagem ..> ISql
+ISql -- Bd
+
+@enduml
