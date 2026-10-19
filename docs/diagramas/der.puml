@@ -5,23 +5,113 @@ hide methods
 entity "Usuário" as Usuario {
   * id : uuid <<PK>>
   --
-  *senha : varchar(255)
-  *nome : varchar(120)
-  *email : varchar(255)
+  * nome : varchar(120)
+  * email : varchar(255) <<UQ>>
+  * senha : varchar(255)
+}
 
-}
 entity Aluno {
-  * id : uuid <<PK>>
+  * id : uuid <<PK, FK>>
   --
-  * cpf : char(64) <<UQ>>
-  * rg : char(64)
+  * cpf : varchar(14) <<UQ>>
+  * rg : varchar(20)
   * curso : varchar(120)
+  * instituicao_id : uuid <<FK>>
+  * endereco_id : uuid <<FK, UQ>>
+  * conta_id : uuid <<FK, UQ>>
 }
-entity Professor{
+
+entity Professor {
+  * id : uuid <<PK, FK>>
+  --
+  * cpf : varchar(14) <<UQ>>
+  * departamento : varchar(255)
+  * instituicao_id : uuid <<FK>>
+  * conta_id : uuid <<FK, UQ>>
+}
+
+entity Empresa {
+  * id : uuid <<PK, FK>>
+  --
+  * cnpj : varchar(18) <<UQ>>
+}
+
+entity "Instituição de Ensino" as InstituicaoEnsino {
   * id : uuid <<PK>>
   --
-  * cpf : char(64) <<UQ>>
-  *departamento : varchar(255)
-  * saldo:  numeric(10,2)
+  * nome : varchar(150)
 }
+
+entity "Endereço" as Endereco {
+  * id : uuid <<PK>>
+  --
+  * rua : varchar(150)
+  * numero : varchar(20)
+  complemento : varchar(100)
+  * bairro : varchar(100)
+  * cidade : varchar(100)
+  * estado : varchar(2)
+  * cep : varchar(9)
+}
+
+entity "Conta de Moedas" as ContaMoedas {
+  * id : uuid <<PK>>
+  --
+  * saldo : integer
+}
+
+entity Vantagem {
+  * id : uuid <<PK>>
+  --
+  * descricao : text
+  foto : varchar(255)
+  * custo_moedas : integer
+  * ativa : boolean
+  * empresa_id : uuid <<FK>>
+}
+
+entity "Transação" as Transacao {
+  * id : uuid <<PK>>
+  --
+  * data_hora : timestamp
+  * valor : integer
+}
+
+entity "Transação de Envio" as TransacaoEnvio {
+  * id : uuid <<PK, FK>>
+  --
+  * motivo : text
+  * professor_id : uuid <<FK>>
+  * aluno_id : uuid <<FK>>
+}
+
+entity Resgate {
+  * id : uuid <<PK, FK>>
+  --
+  * codigo_cupom : varchar(20) <<UQ>>
+  * aluno_id : uuid <<FK>>
+  * vantagem_id : uuid <<FK>>
+}
+
+Usuario ||--o| Aluno
+Usuario ||--o| Professor
+Usuario ||--o| Empresa
+
+InstituicaoEnsino ||--o{ Aluno
+InstituicaoEnsino ||--o{ Professor 
+Endereco ||--|| Aluno
+
+ContaMoedas ||--o| Aluno
+ContaMoedas ||--o| Professor
+
+Transacao ||--o| TransacaoEnvio
+Transacao ||--o| Resgate
+
+Professor ||--o{ TransacaoEnvio
+Aluno ||--o{ TransacaoEnvio
+
+Aluno ||--o{ Resgate
+Vantagem ||--o{ Resgate
+
+Empresa ||--o{ Vantagem
 @enduml
