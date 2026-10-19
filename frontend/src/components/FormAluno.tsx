@@ -2,6 +2,7 @@ import { useId, useRef, useState, type ComponentProps, type FormEvent } from "re
 import type { Aluno, Instituicao } from "../types";
 import {
   UFS,
+  cpfValido,
   emailValido,
   exibirCpf,
   mascararCep,
@@ -64,6 +65,7 @@ function validar(v: Valores, editando: boolean): Erros {
   if (!v.nome.trim()) erros.nome = obrigatorio;
   else if (v.nome.trim().split(/\s+/).length < 2) erros.nome = "Informe nome e sobrenome";
   if (!v.cpf) erros.cpf = obrigatorio;
+  else if (!cpfValido(v.cpf)) erros.cpf = "CPF inválido";
   if (!v.rg.trim()) erros.rg = obrigatorio;
   if (!v.instituicaoId) erros.instituicaoId = "Selecione a instituição de ensino";
   if (!v.curso.trim()) erros.curso = obrigatorio;

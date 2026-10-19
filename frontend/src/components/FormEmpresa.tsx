@@ -1,6 +1,6 @@
 import { useId, useRef, useState, type ComponentProps, type FormEvent } from "react";
 import type { Empresa } from "../types";
-import { emailValido, exibirCnpj, mascararCnpj } from "../utils/formatos";
+import { cnpjValido, emailValido, exibirCnpj, mascararCnpj } from "../utils/formatos";
 import { Campo, InputSenha, SecaoFormulario } from "./Campo";
 import Modal from "./Modal";
 import Icone from "./Icone";
@@ -28,6 +28,7 @@ function validar(v: Valores, editando: boolean): Erros {
   const erros: Erros = {};
   if (!v.nome.trim()) erros.nome = "Campo obrigatório";
   if (!v.cnpj) erros.cnpj = "Campo obrigatório";
+  else if (!cnpjValido(v.cnpj)) erros.cnpj = "CNPJ inválido";
   if (!v.email.trim()) erros.email = "Campo obrigatório";
   else if (!emailValido(v.email)) erros.email = "E-mail inválido";
   if (!editando || v.senha) {
