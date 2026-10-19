@@ -4,7 +4,7 @@ skinparam shadowing false
 skinparam componentStyle uml2
 skinparam linetype ortho
 skinparam defaultTextAlignment center
-skinparam nodesep 60
+skinparam nodesep 90
 skinparam ranksep 80
 skinparam component {
   BackgroundColor #FEFEFE
@@ -32,12 +32,13 @@ node "Navegador do Usuário" as Estacao {
 node "Servidor Node.js" as Servidor {
 
   package "Camada de Entrada" as Entrada {
-    [Controlador de acesso\n] as Porteiro
+    [Roteador e\nMiddleware de Autenticação] as Porteiro
     [Controlador de Acesso] as CtrlAcesso
     [Controlador de Aluno] as CtrlAluno
     [Controlador de Professor] as CtrlProfessor
     [Controlador de Empresa] as CtrlEmpresa
     [Controlador de Vantagem] as CtrlVantagem
+    [Controlador de Instituição] as CtrlInstituicao
   }
 
   package "Camada de Regras" as Regras {
@@ -46,14 +47,17 @@ node "Servidor Node.js" as Servidor {
     interface "ServicoProfessor" as IServicoProfessor
     interface "ServicoEmpresa" as IServicoEmpresa
     interface "ServicoVantagem" as IServicoVantagem
+    interface "ServicoInstituicao" as IServicoInstituicao
 
     [Gestor de Acesso] as GestorAcesso
     [Gestor de Aluno] as GestorAluno
     [Gestor de Professor] as GestorProfessor
     [Gestor de Empresa] as GestorEmpresa
     [Gestor de Vantagem] as GestorVantagem
+    [Gestor de Instituição] as GestorInstituicao
     [Gestor de Conta de Moedas] as GestorConta
     [Gestor de Aviso] as GestorAviso
+    [Agendador de Crédito Semestral] as Agendador
   }
 
   package "Camada de Dados" as Dados {
@@ -66,9 +70,11 @@ node "Servidor Node.js" as Servidor {
 }
 
 database "PostgreSQL\n(banco: moeda_estudantil)" as Bd
+cloud "Serviço de E-mail" as ServicoEmail
 
 interface "HTTP / REST" as IHttp
 interface "DB driver" as ISql
+interface "SMTP" as ISmtp
 
 
 Usuario --> Spa
@@ -81,6 +87,7 @@ Porteiro --> CtrlAluno
 Porteiro --> CtrlProfessor
 Porteiro --> CtrlEmpresa
 Porteiro --> CtrlVantagem
+Porteiro --> CtrlInstituicao
 
 
 IServicoAcesso - GestorAcesso
@@ -88,6 +95,7 @@ IServicoAluno - GestorAluno
 IServicoProfessor - GestorProfessor
 IServicoEmpresa - GestorEmpresa
 IServicoVantagem - GestorVantagem
+IServicoInstituicao - GestorInstituicao
 
 
 CtrlAcesso --( IServicoAcesso
@@ -95,6 +103,7 @@ CtrlAluno --( IServicoAluno
 CtrlProfessor --( IServicoProfessor
 CtrlEmpresa --( IServicoEmpresa
 CtrlVantagem --( IServicoVantagem
+CtrlInstituicao --( IServicoInstituicao
 
 GestorAluno ..> GestorConta
 GestorAluno ..> GestorVantagem
@@ -102,6 +111,7 @@ GestorAluno ..> GestorAviso
 GestorProfessor ..> GestorConta
 GestorProfessor ..> GestorAviso
 GestorEmpresa ..> GestorVantagem
+Agendador ..> GestorProfessor
 
 
 GestorAcesso ..> PersistUsuario
@@ -111,8 +121,12 @@ GestorProfessor ..> PersistUsuario
 GestorProfessor ..> PersistInstituicao
 GestorEmpresa ..> PersistUsuario
 GestorVantagem ..> PersistVantagem
+GestorInstituicao ..> PersistInstituicao
 GestorConta ..> PersistConta
 GestorConta ..> PersistTransacao
+
+GestorAviso ..> ISmtp
+ISmtp -- ServicoEmail
 
 
 PersistUsuario ..> ISql
