@@ -40,6 +40,7 @@ class Professor {
 }
 
 class Empresa {
+  - cnpj: String
   + cadastrarVantagem(vantagem: Vantagem): void
 }
 
@@ -84,11 +85,11 @@ Transacao <|-- Resgate
 
 Aluno "*" --> "1" InstituicaoEnsino : estuda em
 Professor "*" --> "1" InstituicaoEnsino : vinculado a
-Aluno *-- "1" Endereco
+Aluno "1" *-- "1" Endereco
 
 Aluno "1" *-- "1" ContaMoedas
 Professor "1" *-- "1" ContaMoedas
-ContaMoedas "1" o-- "*" Transacao
+ContaMoedas "1..2" o-- "*" Transacao
 
 TransacaoEnvio "*" --> "1" Professor : remetente
 TransacaoEnvio "*" --> "1" Aluno : destinatário
