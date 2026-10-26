@@ -2,6 +2,7 @@ import { Router } from "express";
 import { AlunoController } from "../controllers/AlunoController";
 import { EmpresaController } from "../controllers/EmpresaController";
 import { InstituicaoController } from "../controllers/InstituicaoController";
+import { ProfessorController } from "../controllers/ProfessorController";
 
 const routes = Router();
 
@@ -18,6 +19,11 @@ routes.get("/empresas/:id", empresas.buscar);
 routes.post("/empresas", empresas.criar);
 routes.put("/empresas/:id", empresas.atualizar);
 routes.delete("/empresas/:id", empresas.remover);
+
+const professores = new ProfessorController();
+routes.get("/professores", professores.listar);
+routes.post("/professores/credito-semestral", professores.creditarSemestre);
+routes.get("/professores/:id", professores.buscar);
 
 const instituicoes = new InstituicaoController();
 routes.get("/instituicoes", instituicoes.listar);
