@@ -11,6 +11,7 @@ const menu: { secao: string; itens: { pagina: Pagina; rotulo: string; icone: Nom
     secao: "Cadastros",
     itens: [
       { pagina: "alunos", rotulo: "Alunos", icone: "aluno" },
+      { pagina: "professores", rotulo: "Professores", icone: "professor" },
       { pagina: "empresas", rotulo: "Empresas parceiras", icone: "empresa" },
     ],
   },

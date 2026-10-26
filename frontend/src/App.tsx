@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "./api";
-import type { Aluno, Aviso, Empresa, Instituicao, TipoAviso } from "./types";
+import type { Aluno, Aviso, Empresa, Instituicao, Professor, TipoAviso } from "./types";
 import { useRota } from "./hooks/useRota";
 import { lerPagina, titulos } from "./rotas";
 import Layout from "./components/Layout";
@@ -8,12 +8,14 @@ import Avisos from "./components/Avisos";
 import Icone from "./components/Icone";
 import VisaoGeral from "./pages/VisaoGeral";
 import Alunos from "./pages/Alunos";
+import Professores from "./pages/Professores";
 import Empresas from "./pages/Empresas";
 
 // APP CARREGANDO OS DADOS PARA QUE O PROGRAMA NAO FIQUE DANDO GET SEMPRE QUE TROCAR DE PAGINA
 export default function App() {
   const { pagina, novo } = lerPagina(useRota());
   const [alunos, setAlunos] = useState<Aluno[]>([]);
+  const [professores, setProfessores] = useState<Professor[]>([]);
   const [empresas, setEmpresas] = useState<Empresa[]>([]);
   const [instituicoes, setInstituicoes] = useState<Instituicao[]>([]);
   const [carregando, setCarregando] = useState(true);
@@ -26,12 +28,14 @@ export default function App() {
     setCarregando(true);
     setErroConexao("");
     try {
-      const [listaAlunos, listaEmpresas, listaInstituicoes] = await Promise.all([
+      const [listaAlunos, listaProfessores, listaEmpresas, listaInstituicoes] = await Promise.all([
         api<Aluno[]>("/alunos"),
+        api<Professor[]>("/professores"),
         api<Empresa[]>("/empresas"),
         api<Instituicao[]>("/instituicoes"),
       ]);
       setAlunos(listaAlunos);
+      setProfessores(listaProfessores);
       setEmpresas(listaEmpresas);
       setInstituicoes(listaInstituicoes);
       setServidorOnline(true);
@@ -142,6 +146,14 @@ export default function App() {
           abrirCadastro={novo}
           aoSalvar={salvarAluno}
           aoRemover={removerAluno}
+        />
+      )}
+      {pagina === "professores" && (
+        <Professores
+          professores={professores}
+          instituicoes={instituicoes}
+          carregando={carregando}
+          indisponivel={Boolean(erroConexao)}
         />
       )}
       {pagina === "empresas" && (

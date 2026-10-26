@@ -32,6 +32,10 @@ export function exibirCpf(valor: string) {
   return somenteDigitos(valor).length === 11 ? mascararCpf(valor) : valor;
 }
 
+export function exibirMoedas(valor: number) {
+  return `${valor.toLocaleString("pt-BR")} ${valor === 1 ? "moeda" : "moedas"}`;
+}
+
 export function exibirCnpj(valor: string) {
   return somenteDigitos(valor).length === 14 ? mascararCnpj(valor) : valor;
 }

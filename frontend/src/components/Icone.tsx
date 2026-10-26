@@ -16,6 +16,12 @@ const caminhos = {
       <path d="M6 12v5c3 3 9 3 12 0v-5" />
     </>
   ),
+  professor: (
+    <>
+      <circle cx="12" cy="8" r="5" />
+      <path d="M20 21a8 8 0 0 0-16 0" />
+    </>
+  ),
   empresa: (
     <>
       <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z" />

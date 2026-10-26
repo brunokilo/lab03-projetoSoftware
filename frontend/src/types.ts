@@ -14,6 +14,11 @@ export interface Endereco {
   cep: string;
 }
 
+export interface ContaMoedas {
+  id: string;
+  saldo: number;
+}
+
 export interface Aluno {
   id: string;
   nome: string;
@@ -23,6 +28,18 @@ export interface Aluno {
   curso: string;
   instituicao: Instituicao;
   endereco?: Endereco;
+  conta?: ContaMoedas | null;
+}
+
+export interface Professor {
+  id: string;
+  nome: string;
+  email: string;
+  cpf: string;
+  departamento: string;
+  instituicao: Instituicao;
+  conta: ContaMoedas;
+  ultimoSemestreCreditado: string | null;
 }
 
 export interface Empresa {
