@@ -18,7 +18,7 @@ entity Aluno {
   * curso : varchar(120)
   * instituicao_id : uuid <<FK>>
   * endereco_id : uuid <<FK, UQ>>
-  * conta_id : uuid <<FK, UQ>>
+  conta_id : uuid <<FK, UQ>>
 }
 
 entity Professor {
@@ -26,6 +26,7 @@ entity Professor {
   --
   * cpf : varchar(14) <<UQ>>
   * departamento : varchar(255)
+  ultimo_semestre_creditado : varchar(6)
   * instituicao_id : uuid <<FK>>
   * conta_id : uuid <<FK, UQ>>
 }
@@ -101,7 +102,7 @@ InstituicaoEnsino ||--o{ Aluno
 InstituicaoEnsino ||--o{ Professor 
 Endereco ||--|| Aluno
 
-ContaMoedas ||--o| Aluno
+ContaMoedas |o--o| Aluno
 ContaMoedas ||--o| Professor
 
 Transacao ||--o| TransacaoEnvio
@@ -114,4 +115,11 @@ Aluno ||--o{ Resgate
 Vantagem ||--o{ Resgate
 
 Empresa ||--o{ Vantagem
+
+legend bottom left
+  **Aluno.conta_id** aceita nulo só para os alunos cadastrados antes da conta de moedas existir;
+  ao iniciar, o servidor cria a conta deles com saldo zero.
+  **Professor.ultimo_semestre_creditado** guarda o semestre do último crédito de 1.000 moedas
+  (ex.: 2026-2), para que o professor não receba o crédito duas vezes no mesmo semestre.
+endlegend
 @enduml
