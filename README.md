@@ -77,8 +77,9 @@ O projeto está **em desenvolvimento**. A tabela mostra a situação de cada req
 | Cadastro, edição, listagem e exclusão de empresas parceiras | ✅ Implementado | Back-end e front-end |
 | Armazenamento seguro de senhas | ✅ Implementado | Hash com `bcryptjs`; a senha nunca é retornada pela API |
 | Cadastro de vantagens (descrição, foto e custo) | 🟡 Parcial | Entidade `Vantagem` modelada no banco; ainda sem rotas e telas |
-| Professores pré-cadastrados (nome, CPF, departamento) | ⏳ Pendente | Modelado nos diagramas |
-| Distribuição semestral de 1.000 moedas com saldo acumulável | ⏳ Pendente | |
+| Professores pré-cadastrados (nome, CPF, departamento) | ✅ Implementado | Carga inicial com 6 professores (2 por instituição); tela de consulta no front-end |
+| Conta de moedas de professores e alunos | ✅ Implementado | Cada professor e cada aluno tem uma `ContaMoedas`; o saldo aparece nas telas |
+| Distribuição semestral de 1.000 moedas com saldo acumulável | ✅ Implementado | Automática ao iniciar o servidor e conferida uma vez por dia |
 | Envio de moedas com motivo obrigatório | ⏳ Pendente | |
 | Notificação do aluno por e-mail | ⏳ Pendente | |
 | Extrato de professores e alunos | ⏳ Pendente | |
@@ -92,12 +93,15 @@ O projeto está **em desenvolvimento**. A tabela mostra a situação de cada req
 - 🎓 **Gestão de alunos:** cadastro com nome, e-mail, senha, CPF, RG, curso, instituição de ensino e endereço completo, além de edição, listagem e exclusão.
 - 🏢 **Gestão de empresas parceiras:** cadastro com nome, e-mail, senha e CNPJ, além de edição, listagem e exclusão.
 - 🏫 **Instituições pré-cadastradas:** na primeira vez que o back-end sobe, ele cadastra as instituições participantes, que ficam disponíveis para o aluno escolher no cadastro.
+- 👩‍🏫 **Professores pré-cadastrados:** na primeira execução, o back-end cadastra os professores enviados pelas instituições, com nome, e-mail, CPF, departamento e instituição. A senha inicial de todos é `professor123`. A tela **Professores** permite consultar a lista, com busca, filtro por instituição e saldo de cada um.
+- 🪙 **Conta de moedas:** cada professor e cada aluno tem uma conta de moedas. O aluno começa com saldo zero, e a conta é criada no cadastro e apagada junto com o aluno. A conta impede saldo negativo e só aceita valores inteiros e positivos, o que já prepara o envio e a troca de moedas.
+- 📅 **Crédito semestral:** cada professor recebe **1.000 moedas** por semestre (1º semestre de janeiro a junho, 2º de julho a dezembro). O servidor credita ao iniciar e confere uma vez por dia se começou um semestre novo. Cada professor recebe no máximo um crédito por semestre, mesmo que o crédito seja disparado várias vezes ao mesmo tempo, e o saldo que sobrou se soma ao novo crédito.
 - ✅ **Validações nos formulários:** dígitos verificadores de CPF e CNPJ, formato de e-mail, campos obrigatórios e máscaras de CPF, CNPJ e CEP.
 - 📮 **Preenchimento automático do endereço:** a partir do CEP, usando a API pública do [ViaCEP](https://viacep.com.br/).
 - 🔒 **Senhas protegidas:** são armazenadas com hash (`bcryptjs`) e removidas das respostas da API.
 - 🚫 **Tratamento de erros:** a API responde com mensagens claras para campos obrigatórios, registros não encontrados (404) e e-mail, CPF ou CNPJ duplicados (409).
-- 📊 **Visão geral:** painel com os totais de alunos, empresas e instituições, os cadastros mais recentes e as etapas do programa de mérito.
-- 🧭 **Interface web:** menu lateral, rotas na URL via hash (`#/alunos`, `#/empresas`, `#/alunos/novo`), que mantêm a página ao recarregar, busca, paginação, modais de confirmação, avisos de sucesso e erro, e indicação de quando o servidor está offline.
+- 📊 **Visão geral:** painel com os totais de alunos, empresas, instituições e cursos, a distribuição dos alunos por instituição, as etapas do programa de mérito e as empresas parceiras.
+- 🧭 **Interface web:** menu lateral, rotas na URL via hash (`#/alunos`, `#/professores`, `#/empresas`, `#/alunos/novo`), que mantêm a página ao recarregar, busca, paginação, modais de confirmação, avisos de sucesso e erro, e indicação de quando o servidor está offline.
 
 ---
 
@@ -146,7 +150,7 @@ Rotas  →  Controllers  →  Services  →  Repositories  →  TypeORM  →  Po
 | `controllers/` | Recebem a requisição HTTP e devolvem a resposta com o status adequado |
 | `services/` | Regras de negócio: validação de campos obrigatórios, hash de senha, remoção da senha das respostas |
 | `repositories/` | Acesso aos dados pelo TypeORM |
-| `entities/` | Mapeamento das tabelas (`Usuario`, `Aluno`, `Empresa`, `Endereco`, `InstituicaoEnsino`, `Vantagem`) |
+| `entities/` | Mapeamento das tabelas (`Usuario`, `Aluno`, `Professor`, `Empresa`, `ContaMoedas`, `Endereco`, `InstituicaoEnsino`, `Vantagem`) |
 | `errors/` | `AppError`, tratado por um middleware global de erros |
 
 A classe abstrata `Usuario` concentra os campos comuns de quem acessa o sistema (`nome`, `email`, `senha`), e `Aluno` e `Empresa` herdam dela.
@@ -176,6 +180,9 @@ Por padrão, a API responde em `http://localhost:3000`. Todas as rotas trabalham
 | `POST` | `/alunos` | Cadastra um aluno |
 | `PUT` | `/alunos/:id` | Atualiza um aluno (só os campos enviados) |
 | `DELETE` | `/alunos/:id` | Remove um aluno |
+| `GET` | `/professores` | Lista os professores, com instituição e conta de moedas |
+| `GET` | `/professores/:id` | Busca um professor |
+| `POST` | `/professores/credito-semestral` | Credita as 1.000 moedas do semestre atual para os professores que ainda não receberam. Pode ser chamado mais de uma vez sem creditar em dobro |
 | `GET` | `/empresas` | Lista as empresas parceiras |
 | `GET` | `/empresas/:id` | Busca uma empresa |
 | `POST` | `/empresas` | Cadastra uma empresa |
@@ -210,7 +217,7 @@ curl -X POST http://localhost:3000/alunos \
 
 | Status | Quando acontece |
 | :---: | :--- |
-| `400` | Falta um campo obrigatório |
+| `400` | Falta um campo obrigatório, um campo excede o tamanho permitido, o id não é válido ou o corpo não é um JSON válido |
 | `404` | O aluno, a empresa ou a instituição não foi encontrado |
 | `409` | Já existe um cadastro com o mesmo e-mail, CPF ou CNPJ |
 | `500` | Erro interno do servidor |
@@ -279,7 +286,7 @@ npm install
 npm run dev
 ```
 
-Quando o servidor sobe, aparecem as mensagens `Banco conectado` e `Servidor rodando em http://localhost:3000`. Na primeira execução, as instituições iniciais também são cadastradas.
+Quando o servidor sobe, aparecem as mensagens `Banco conectado` e `Servidor rodando em http://localhost:3000`. Na primeira execução, o servidor também cadastra as instituições e os professores iniciais e credita as moedas do semestre.
 
 | Script | Descrição |
 | :--- | :--- |
@@ -325,7 +332,7 @@ A aplicação fica disponível em **http://localhost:5173**.
 │       ├── controllers/          # 🎮 Camada HTTP
 │       ├── services/             # ⚙️ Regras de negócio
 │       ├── repositories/         # 🗄️ Acesso a dados
-│       ├── entities/             # 🧬 Entidades (Usuario, Aluno, Empresa, Endereco, InstituicaoEnsino, Vantagem)
+│       ├── entities/             # 🧬 Entidades (Usuario, Aluno, Professor, Empresa, ContaMoedas, Endereco, InstituicaoEnsino, Vantagem)
 │       └── errors/               # 💥 AppError
 │
 ├── frontend/                     # 📁 Aplicação web (React + Vite)
@@ -337,7 +344,7 @@ A aplicação fica disponível em **http://localhost:5173**.
 │       ├── rotas.ts              # 🧭 Mapeamento das páginas
 │       ├── types.ts              # 🏷️ Tipos compartilhados
 │       ├── index.css             # 🎨 Estilos globais
-│       ├── pages/                # 📄 Visão geral, Alunos e Empresas
+│       ├── pages/                # 📄 Visão geral, Alunos, Professores e Empresas
 │       ├── components/           # 🧱 Formulários, modal, campos, avisos, paginação, ícones
 │       ├── hooks/                # 🎣 useRota
 │       └── utils/                # 🛠️ Máscaras, validação de CPF/CNPJ e busca de CEP
