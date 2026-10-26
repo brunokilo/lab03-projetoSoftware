@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { Aluno, Instituicao } from "../types";
-import { compararNomes, exibirCpf, normalizar, somenteDigitos } from "../utils/formatos";
+import { compararNomes, exibirCpf, exibirMoedas, normalizar, somenteDigitos } from "../utils/formatos";
 import { substituirRota } from "../hooks/useRota";
 import Avatar from "../components/Avatar";
 import Confirmacao from "../components/Confirmacao";
@@ -163,6 +163,7 @@ export default function Alunos({
                     <th className="ocultar-celular">Curso</th>
                     <th>Instituição</th>
                     <th className="ocultar-celular">Cidade</th>
+                    <th>Saldo</th>
                     <th>
                       <span className="sr-only">Ações</span>
                     </th>
@@ -188,6 +189,7 @@ export default function Alunos({
                       <td className="sem-quebra ocultar-celular">
                         {a.endereco ? `${a.endereco.cidade}/${a.endereco.estado}` : "—"}
                       </td>
+                      <td className="numero">{exibirMoedas(a.conta?.saldo ?? 0)}</td>
                       <td className="acoes">
                         <button
                           type="button"
@@ -250,7 +252,9 @@ export default function Alunos({
             Tem certeza que deseja excluir o cadastro de <strong>{excluindo.nome}</strong>?
           </p>
           <p className="texto-suave">
-            Os dados pessoais e o endereço do aluno serão removidos permanentemente. Essa ação não pode ser desfeita.
+            Os dados pessoais, o endereço e a conta de moedas do aluno
+            {excluindo.conta?.saldo ? `, com saldo de ${exibirMoedas(excluindo.conta.saldo)},` : ""} serão removidos
+            permanentemente. Essa ação não pode ser desfeita.
           </p>
         </Confirmacao>
       )}
