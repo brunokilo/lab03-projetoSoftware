@@ -3,6 +3,7 @@ import { AlunoRepository } from "../repositories/AlunoRepository";
 import { InstituicaoRepository } from "../repositories/InstituicaoRepository";
 import { Aluno } from "../entities/Aluno";
 import { Endereco } from "../entities/Endereco";
+import { ContaMoedas } from "../entities/ContaMoedas";
 import { AppError } from "../errors/AppError";
 
 export interface AlunoDados {
@@ -49,6 +50,7 @@ export class AlunoService {
     aluno.curso = dados.curso!;
     aluno.instituicao = await this.obterInstituicao(dados.instituicaoId!);
     aluno.endereco = Object.assign(new Endereco(), dados.endereco);
+    aluno.conta = ContaMoedas.nova();
 
     return semSenha(await this.repository.salvar(aluno));
   }
@@ -71,6 +73,15 @@ export class AlunoService {
   async remover(id: string) {
     const aluno = await this.obter(id);
     await this.repository.remover(aluno);
+  }
+
+  // Alunos cadastrados antes da conta de moedas existir ganham uma conta zerada
+  async garantirContas() {
+    const semConta = await this.repository.listarSemConta();
+    if (semConta.length === 0) return;
+    for (const aluno of semConta) aluno.conta = ContaMoedas.nova();
+    await this.repository.salvarVarios(semConta);
+    console.log(`Contas de moedas criadas para ${semConta.length} aluno(s)`);
   }
 
   private async obter(id: string) {

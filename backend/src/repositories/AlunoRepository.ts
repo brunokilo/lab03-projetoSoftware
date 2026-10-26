@@ -1,5 +1,7 @@
+import { IsNull } from "typeorm";
 import { AppDataSource } from "../data-source";
 import { Aluno } from "../entities/Aluno";
+import { ContaMoedas } from "../entities/ContaMoedas";
 import { Endereco } from "../entities/Endereco";
 
 export class AlunoRepository {
@@ -11,6 +13,10 @@ export class AlunoRepository {
     return this.repo.find({ relations: { instituicao: true } });
   }
 
+  listarSemConta() {
+    return this.repo.find({ where: { conta: IsNull() } });
+  }
+
   buscarPorId(id: string) {
     return this.repo.findOne({ where: { id }, relations: { instituicao: true } });
   }
@@ -19,8 +25,16 @@ export class AlunoRepository {
     return this.repo.save(aluno);
   }
 
-  async remover(aluno: Aluno) {
-    await this.repo.delete(aluno.id);
-    await AppDataSource.getRepository(Endereco).delete(aluno.endereco.id);
+  salvarVarios(alunos: Aluno[]) {
+    return this.repo.save(alunos);
+  }
+
+  // Aluno, endereço e conta saem juntos: se uma etapa falhar, nada é apagado
+  remover(aluno: Aluno) {
+    return AppDataSource.transaction(async (manager) => {
+      await manager.delete(Aluno, aluno.id);
+      if (aluno.endereco) await manager.delete(Endereco, aluno.endereco.id);
+      if (aluno.conta) await manager.delete(ContaMoedas, aluno.conta.id);
+    });
   }
 }
