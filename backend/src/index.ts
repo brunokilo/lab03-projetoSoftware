@@ -30,6 +30,12 @@ app.use((erro: any, _req: Request, res: Response, _next: NextFunction) => {
   if (erro?.code === "23505" || erro?.driverError?.code === "23505") {
     return res.status(409).json({ erro: "Já existe um cadastro com esse email, CPF ou CNPJ" });
   }
+  if (erro?.type === "entity.parse.failed") {
+    return res.status(400).json({ erro: "O corpo da requisição não é um JSON válido" });
+  }
+  if (erro?.code === "23503" || erro?.driverError?.code === "23503") {
+    return res.status(409).json({ erro: "Não é possível excluir: o cadastro possui transações de moedas" });
+  }
   console.error(erro);
   res.status(500).json({ erro: "Erro interno do servidor" });
 });

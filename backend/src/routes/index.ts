@@ -3,13 +3,18 @@ import { AlunoController } from "../controllers/AlunoController";
 import { EmpresaController } from "../controllers/EmpresaController";
 import { InstituicaoController } from "../controllers/InstituicaoController";
 import { AuthController } from "../controllers/AuthController";
-import { autenticar } from "../middlewares/autenticar";
+import { MoedaController } from "../controllers/MoedaController";
+import { autenticar, exigirPerfil } from "../middlewares/autenticar";
 
 const routes = Router();
 
 const auth = new AuthController();
 routes.post("/login", auth.login);
 routes.get("/me", autenticar, auth.me);
+
+const moedas = new MoedaController();
+routes.post("/moedas/enviar", autenticar, exigirPerfil("professor"), moedas.enviar);
+routes.get("/moedas/saldo", autenticar, exigirPerfil("professor", "aluno"), moedas.saldo);
 
 const alunos = new AlunoController();
 routes.get("/alunos", alunos.listar);
