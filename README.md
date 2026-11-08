@@ -80,9 +80,9 @@ O projeto está **em desenvolvimento**. A tabela mostra a situação de cada req
 | Professores pré-cadastrados (nome, CPF, departamento) | ✅ Implementado | Carga inicial com 6 professores (2 por instituição); tela de consulta no front-end |
 | Conta de moedas de professores e alunos | ✅ Implementado | Cada professor e cada aluno tem uma `ContaMoedas`; o saldo aparece nas telas |
 | Distribuição semestral de 1.000 moedas com saldo acumulável | ✅ Implementado | Automática ao iniciar o servidor e conferida uma vez por dia |
-| Envio de moedas com motivo obrigatório | ⏳ Pendente | |
+| Envio de moedas com motivo obrigatório | ✅ Implementado | Só para alunos da mesma instituição do professor e com saldo suficiente |
 | Notificação do aluno por e-mail | ⏳ Pendente | |
-| Extrato de professores e alunos | ⏳ Pendente | |
+| Extrato de professores e alunos | ✅ Implementado | Saldo atual e transações (envios do professor, recebimentos do aluno); os resgates entram quando a troca existir |
 | Resgate de vantagens com cupom e código por e-mail | ⏳ Pendente | |
 | Login e autenticação | ⏳ Pendente | As senhas já são cadastradas, mas ainda não existe login e as rotas não exigem autenticação |
 
@@ -183,6 +183,9 @@ Por padrão, a API responde em `http://localhost:3000`. Todas as rotas trabalham
 | `GET` | `/professores` | Lista os professores, com instituição e conta de moedas |
 | `GET` | `/professores/:id` | Busca um professor |
 | `POST` | `/professores/credito-semestral` | Credita as 1.000 moedas do semestre atual para os professores que ainda não receberam. Pode ser chamado mais de uma vez sem creditar em dobro |
+| `POST` | `/professores/:id/envios` | Envia moedas a um aluno (`alunoId`, `valor`, `motivo`) e devolve a transação e os novos saldos |
+| `GET` | `/professores/:id/extrato` | Saldo do professor e moedas que ele enviou, da mais recente para a mais antiga |
+| `GET` | `/alunos/:id/extrato` | Saldo do aluno e moedas que ele recebeu, da mais recente para a mais antiga |
 | `GET` | `/empresas` | Lista as empresas parceiras |
 | `GET` | `/empresas/:id` | Busca uma empresa |
 | `POST` | `/empresas` | Cadastra uma empresa |
