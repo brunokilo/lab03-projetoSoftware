@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { api } from "./api";
-import type { Aluno, Aviso, Empresa, Instituicao, TipoAviso } from "./types";
-import { useRota } from "./hooks/useRota";
+import { api, guardarToken, lerToken, limparToken, SESSAO_EXPIRADA } from "./api";
+import type { Aluno, Aviso, Empresa, Instituicao, TipoAviso, Usuario } from "./types";
+import { navegar, useRota } from "./hooks/useRota";
 import { lerPagina, titulos } from "./rotas";
 import Layout from "./components/Layout";
 import Avisos from "./components/Avisos";
@@ -9,9 +9,47 @@ import Icone from "./components/Icone";
 import VisaoGeral from "./pages/VisaoGeral";
 import Alunos from "./pages/Alunos";
 import Empresas from "./pages/Empresas";
+import Login from "./pages/Login";
 
-// APP CARREGANDO OS DADOS PARA QUE O PROGRAMA NAO FIQUE DANDO GET SEMPRE QUE TROCAR DE PAGINA
+// Controla a sessão: sem usuário logado só aparece o login
 export default function App() {
+  const [usuario, setUsuario] = useState<Usuario | null>(null);
+  // Se há token guardado, confirma com a API (GET /me) antes de decidir entre login e painel
+  const [verificando, setVerificando] = useState(() => Boolean(lerToken()));
+
+  useEffect(() => {
+    if (!lerToken()) return;
+    api<Usuario>("/me")
+      .then(setUsuario)
+      .catch(() => {})
+      .finally(() => setVerificando(false));
+  }, []);
+
+  // A API recusou o token em alguma chamada: volta para o login
+  useEffect(() => {
+    const expirou = () => setUsuario(null);
+    window.addEventListener(SESSAO_EXPIRADA, expirou);
+    return () => window.removeEventListener(SESSAO_EXPIRADA, expirou);
+  }, []);
+
+  function entrar(token: string, logado: Usuario) {
+    guardarToken(token);
+    setUsuario(logado);
+  }
+
+  function sair() {
+    limparToken();
+    setUsuario(null);
+    navegar("/");
+  }
+
+  if (verificando) return <div className="tela-verificando">Verificando sessão…</div>;
+  if (!usuario) return <Login aoEntrar={entrar} />;
+  return <Painel usuario={usuario} aoSair={sair} />;
+}
+
+// PAINEL CARREGANDO OS DADOS PARA QUE O PROGRAMA NAO FIQUE DANDO GET SEMPRE QUE TROCAR DE PAGINA
+function Painel({ usuario, aoSair }: { usuario: Usuario; aoSair: () => void }) {
   const { pagina, novo } = lerPagina(useRota());
   const [alunos, setAlunos] = useState<Aluno[]>([]);
   const [empresas, setEmpresas] = useState<Empresa[]>([]);
@@ -109,7 +147,7 @@ export default function App() {
   }
 
   return (
-    <Layout pagina={pagina} servidorOnline={servidorOnline}>
+    <Layout pagina={pagina} servidorOnline={servidorOnline} usuario={usuario} aoSair={aoSair}>
       {erroConexao && (
         <div className="alerta-conexao" role="alert">
           <Icone nome="alerta" tamanho={20} />

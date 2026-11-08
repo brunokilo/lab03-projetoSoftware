@@ -1,6 +1,14 @@
 import { useState, type ReactNode } from "react";
 import Icone, { type NomeIcone } from "./Icone";
 import { titulos, type Pagina } from "../rotas";
+import type { Perfil, Usuario } from "../types";
+import Avatar from "./Avatar";
+
+const rotuloPerfil: Record<Perfil, string> = {
+  aluno: "Aluno",
+  professor: "Professor",
+  empresa: "Empresa parceira",
+};
 
 const menu: { secao: string; itens: { pagina: Pagina; rotulo: string; icone: NomeIcone }[] }[] = [
   {
@@ -19,10 +27,12 @@ const menu: { secao: string; itens: { pagina: Pagina; rotulo: string; icone: Nom
 interface Props {
   pagina: Pagina;
   servidorOnline: boolean | null;
+  usuario: Usuario;
+  aoSair: () => void;
   children: ReactNode;
 }
 
-export default function Layout({ pagina, servidorOnline, children }: Props) {
+export default function Layout({ pagina, servidorOnline, usuario, aoSair, children }: Props) {
   // Guarda em qual página o menu (celular) foi aberto: ao trocar de página ele fecha sozinho
   const [menuAbertoEm, setMenuAbertoEm] = useState<Pagina | null>(null);
   const menuAberto = menuAbertoEm === pagina;
@@ -94,9 +104,21 @@ export default function Layout({ pagina, servidorOnline, children }: Props) {
             <Icone nome="proximo" tamanho={14} />
             <strong>{titulos[pagina]}</strong>
           </nav>
-          <span className="data-hoje">
-            {new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" })}
-          </span>
+          <div className="topo-direita">
+            <span className="data-hoje">
+              {new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" })}
+            </span>
+            <div className="usuario-logado">
+              <Avatar nome={usuario.nome} />
+              <div>
+                <strong>{usuario.nome}</strong>
+                <small>{rotuloPerfil[usuario.perfil]}</small>
+              </div>
+            </div>
+            <button type="button" className="botao-icone com-borda" onClick={aoSair} title="Sair" aria-label="Sair">
+              <Icone nome="sair" tamanho={16} />
+            </button>
+          </div>
         </header>
         <main className="principal">{children}</main>
       </div>

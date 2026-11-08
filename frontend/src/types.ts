@@ -32,6 +32,16 @@ export interface Empresa {
   cnpj: string;
 }
 
+export type Perfil = "aluno" | "professor" | "empresa";
+
+// Quem está logado (resposta de POST /login e GET /me)
+export interface Usuario {
+  id: string;
+  nome: string;
+  email: string;
+  perfil: Perfil;
+}
+
 export type TipoAviso = "sucesso" | "erro";
 
 export interface Aviso {

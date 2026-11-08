@@ -77,13 +77,13 @@ O projeto está **em desenvolvimento**. A tabela mostra a situação de cada req
 | Cadastro, edição, listagem e exclusão de empresas parceiras | ✅ Implementado | Back-end e front-end |
 | Armazenamento seguro de senhas | ✅ Implementado | Hash com `bcryptjs`; a senha nunca é retornada pela API |
 | Cadastro de vantagens (descrição, foto e custo) | 🟡 Parcial | Entidade `Vantagem` modelada no banco; ainda sem rotas e telas |
-| Professores pré-cadastrados (nome, CPF, departamento) | ⏳ Pendente | Modelado nos diagramas |
+| Professores pré-cadastrados (nome, CPF, departamento) | 🟡 Parcial | Entidade `Professor` e carga inicial com 2 professores por instituição; sem CRUD, como pede o enunciado |
 | Distribuição semestral de 1.000 moedas com saldo acumulável | ⏳ Pendente | |
 | Envio de moedas com motivo obrigatório | ⏳ Pendente | |
 | Notificação do aluno por e-mail | ⏳ Pendente | |
 | Extrato de professores e alunos | ⏳ Pendente | |
 | Resgate de vantagens com cupom e código por e-mail | ⏳ Pendente | |
-| Login e autenticação | ⏳ Pendente | As senhas já são cadastradas, mas ainda não existe login e as rotas não exigem autenticação |
+| Login e autenticação | 🟡 Parcial | Login de aluno, professor e empresa com JWT e middleware `autenticar`; as rotas de moedas e extrato vão usá-lo. Os CRUDs de alunos e empresas ainda não exigem token |
 
 ---
 
@@ -95,6 +95,8 @@ O projeto está **em desenvolvimento**. A tabela mostra a situação de cada req
 - ✅ **Validações nos formulários:** dígitos verificadores de CPF e CNPJ, formato de e-mail, campos obrigatórios e máscaras de CPF, CNPJ e CEP.
 - 📮 **Preenchimento automático do endereço:** a partir do CEP, usando a API pública do [ViaCEP](https://viacep.com.br/).
 - 🔒 **Senhas protegidas:** são armazenadas com hash (`bcryptjs`) e removidas das respostas da API.
+- 🔑 **Login:** aluno, professor e empresa entram com e-mail e senha e recebem um token JWT. O e-mail é único entre os três perfis. A sessão é recuperada ao recarregar a página e há botão de sair.
+- 👨‍🏫 **Professores pré-cadastrados:** a carga inicial cria 2 professores por instituição, com saldo de 1.000 moedas.
 - 🚫 **Tratamento de erros:** a API responde com mensagens claras para campos obrigatórios, registros não encontrados (404) e e-mail, CPF ou CNPJ duplicados (409).
 - 📊 **Visão geral:** painel com os totais de alunos, empresas e instituições, os cadastros mais recentes e as etapas do programa de mérito.
 - 🧭 **Interface web:** menu lateral, rotas na URL via hash (`#/alunos`, `#/empresas`, `#/alunos/novo`), que mantêm a página ao recarregar, busca, paginação, modais de confirmação, avisos de sucesso e erro, e indicação de quando o servidor está offline.
@@ -170,6 +172,8 @@ Por padrão, a API responde em `http://localhost:3000`. Todas as rotas trabalham
 | Método | Rota | Descrição |
 | :--- | :--- | :--- |
 | `GET` | `/` | Verifica se a API está no ar |
+| `POST` | `/login` | Autentica com `email` e `senha` e devolve `{ token, usuario }` |
+| `GET` | `/me` | Dados de quem está logado (exige `Authorization: Bearer <token>`) |
 | `GET` | `/instituicoes` | Lista as instituições de ensino |
 | `GET` | `/alunos` | Lista os alunos |
 | `GET` | `/alunos/:id` | Busca um aluno |
@@ -211,8 +215,10 @@ curl -X POST http://localhost:3000/alunos \
 | Status | Quando acontece |
 | :---: | :--- |
 | `400` | Falta um campo obrigatório |
+| `401` | Login inválido, ou token ausente, expirado ou inválido |
+| `403` | O perfil do usuário não tem permissão para a rota |
 | `404` | O aluno, a empresa ou a instituição não foi encontrado |
-| `409` | Já existe um cadastro com o mesmo e-mail, CPF ou CNPJ |
+| `409` | Já existe um cadastro com o mesmo e-mail (em qualquer perfil), CPF ou CNPJ |
 | `500` | Erro interno do servidor |
 
 ---
@@ -238,6 +244,8 @@ DB_USER=postgres
 DB_PASSWORD=postgres
 DB_NAME=moeda_estudantil
 PORT=3000
+JWT_SECRET=troque-por-um-texto-longo-e-aleatorio
+JWT_EXPIRES_IN=8h
 ```
 
 | Variável | Descrição | Padrão |
@@ -248,6 +256,20 @@ PORT=3000
 | `DB_PASSWORD` | Senha do banco | — |
 | `DB_NAME` | Nome do banco | — |
 | `PORT` | Porta da API | `3000` |
+| `JWT_SECRET` | Segredo usado para assinar os tokens de login (obrigatório: sem ele a API não sobe) | — |
+| `JWT_EXPIRES_IN` | Validade do token | `8h` |
+
+#### Usuários de teste
+
+Os professores são criados na primeira vez que o back-end sobe, todos com a senha `senha123`:
+
+| Instituição | Professores (e-mail) |
+| :--- | :--- |
+| PUC Minas | `cristiano@pucminas.br`, `rafael@pucminas.br` |
+| UFMG | `marina@ufmg.br`, `henrique@ufmg.br` |
+| CEFET-MG | `patricia@cefetmg.br`, `eduardo@cefetmg.br` |
+
+Alunos e empresas entram com o e-mail e a senha informados no cadastro (a tela de login tem o link "Criar conta de aluno").
 
 #### Front-end (`frontend/.env`), opcional
 
@@ -323,6 +345,7 @@ A aplicação fica disponível em **http://localhost:5173**.
 │       ├── data-source.ts        # 🔧 Conexão com o PostgreSQL (TypeORM)
 │       ├── routes/               # 🛣️ Definição dos endpoints
 │       ├── controllers/          # 🎮 Camada HTTP
+│       ├── middlewares/          # 🔐 Autenticação (JWT) e controle por perfil
 │       ├── services/             # ⚙️ Regras de negócio
 │       ├── repositories/         # 🗄️ Acesso a dados
 │       ├── entities/             # 🧬 Entidades (Usuario, Aluno, Empresa, Endereco, InstituicaoEnsino, Vantagem)
