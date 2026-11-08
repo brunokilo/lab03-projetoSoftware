@@ -42,6 +42,27 @@ export interface Professor {
   ultimoSemestreCreditado: string | null;
 }
 
+export interface Transacao {
+  id: string;
+  tipo: "envio";
+  dataHora: string;
+  valor: number;
+  motivo: string;
+  professor: { id: string; nome: string };
+  aluno: { id: string; nome: string } | null;
+}
+
+export interface Extrato {
+  saldo: number;
+  transacoes: Transacao[];
+}
+
+export interface ResultadoEnvio {
+  transacao: Transacao;
+  saldoProfessor: number;
+  saldoAluno: number;
+}
+
 export interface Empresa {
   id: string;
   nome: string;

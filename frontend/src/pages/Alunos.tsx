@@ -5,6 +5,7 @@ import { substituirRota } from "../hooks/useRota";
 import Avatar from "../components/Avatar";
 import Confirmacao from "../components/Confirmacao";
 import EstadoVazio from "../components/EstadoVazio";
+import Extrato from "../components/Extrato";
 import FormAluno from "../components/FormAluno";
 import Icone from "../components/Icone";
 import Paginacao from "../components/Paginacao";
@@ -36,6 +37,7 @@ export default function Alunos({
   // null = fechado; { aluno: undefined } = cadastro; { aluno } = edição
   const [formulario, setFormulario] = useState<{ aluno?: Aluno } | null>(null);
   const [excluindo, setExcluindo] = useState<Aluno | null>(null);
+  const [extratoDe, setExtratoDe] = useState<Aluno | null>(null);
 
   // A rota #/alunos/novo (atalho da visão geral) abre o cadastro e volta a URL para #/alunos
   useEffect(() => {
@@ -194,6 +196,15 @@ export default function Alunos({
                         <button
                           type="button"
                           className="botao-icone"
+                          onClick={() => setExtratoDe(a)}
+                          title="Ver extrato"
+                          aria-label={`Ver extrato de ${a.nome}`}
+                        >
+                          <Icone nome="extrato" tamanho={16} />
+                        </button>
+                        <button
+                          type="button"
+                          className="botao-icone"
                           onClick={() => setFormulario({ aluno: a })}
                           title="Editar"
                           aria-label={`Editar ${a.nome}`}
@@ -237,6 +248,8 @@ export default function Alunos({
           }}
         />
       )}
+
+      {extratoDe && <Extrato tipo="aluno" pessoa={extratoDe} aoFechar={() => setExtratoDe(null)} />}
 
       {excluindo && (
         <Confirmacao

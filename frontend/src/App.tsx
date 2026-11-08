@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "./api";
-import type { Aluno, Aviso, Empresa, Instituicao, Professor, TipoAviso } from "./types";
+import type { Aluno, Aviso, Empresa, Instituicao, Professor, ResultadoEnvio, TipoAviso } from "./types";
+import { exibirMoedas } from "./utils/formatos";
 import { useRota } from "./hooks/useRota";
 import { lerPagina, titulos } from "./rotas";
 import Layout from "./components/Layout";
@@ -89,6 +90,23 @@ export default function App() {
     }
   }
 
+  // Atualiza na memória os saldos do professor e do aluno com o que a API devolveu
+  async function enviarMoedas(professor: Professor, dados: { alunoId: string; valor: number; motivo: string }) {
+    const resultado = await api<ResultadoEnvio>(`/professores/${professor.id}/envios`, {
+      method: "POST",
+      body: JSON.stringify(dados),
+    });
+    setProfessores((lista) =>
+      lista.map((p) => (p.id === professor.id ? { ...p, conta: { ...p.conta, saldo: resultado.saldoProfessor } } : p)),
+    );
+    setAlunos((lista) =>
+      lista.map((a) =>
+        a.id === dados.alunoId && a.conta ? { ...a, conta: { ...a.conta, saldo: resultado.saldoAluno } } : a,
+      ),
+    );
+    notificar("sucesso", `${exibirMoedas(dados.valor)} enviadas para ${resultado.transacao.aluno?.nome}.`);
+  }
+
   async function salvarEmpresa(dados: object, id?: string) {
     const corpo = JSON.stringify(dados);
     if (id) {
@@ -151,9 +169,11 @@ export default function App() {
       {pagina === "professores" && (
         <Professores
           professores={professores}
+          alunos={alunos}
           instituicoes={instituicoes}
           carregando={carregando}
           indisponivel={Boolean(erroConexao)}
+          aoEnviar={enviarMoedas}
         />
       )}
       {pagina === "empresas" && (
