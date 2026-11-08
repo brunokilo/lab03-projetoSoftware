@@ -5,6 +5,7 @@ import { InstituicaoEnsino } from "./entities/InstituicaoEnsino";
 import { Endereco } from "./entities/Endereco";
 import { Aluno } from "./entities/Aluno";
 import { Empresa } from "./entities/Empresa";
+import { Professor } from "./entities/Professor";
 import { Vantagem } from "./entities/Vantagem";
 
 export const AppDataSource = new DataSource({
@@ -14,6 +15,6 @@ export const AppDataSource = new DataSource({
   username: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
-  entities: [InstituicaoEnsino, Endereco, Aluno, Empresa, Vantagem],
+  entities: [InstituicaoEnsino, Endereco, Aluno, Professor, Empresa, Vantagem],
   synchronize: true,
 });

@@ -6,6 +6,12 @@ import { AppDataSource } from "./data-source";
 import routes from "./routes";
 import { AppError } from "./errors/AppError";
 import { InstituicaoService } from "./services/InstituicaoService";
+import { ProfessorService } from "./services/ProfessorService";
+
+if (!process.env.JWT_SECRET) {
+  console.error("Defina JWT_SECRET no arquivo .env do back-end");
+  process.exit(1);
+}
 
 const app = express();
 app.use(cors());
@@ -34,6 +40,7 @@ AppDataSource.initialize()
   .then(async () => {
     console.log("Banco conectado");
     await new InstituicaoService().popularInicial();
+    await new ProfessorService().popularInicial();
     app.listen(porta, () => {
       console.log(`Servidor rodando em http://localhost:${porta}`);
     });
