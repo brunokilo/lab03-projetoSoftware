@@ -1,8 +1,9 @@
-@startuml
+@startuml caso_de_uso
 left to right direction
 skinparam packageStyle rectangle
 
 actor "Sistema de email" as Sistema_de_email <<sistema externo>>
+actor "Relógio" as Relogio <<sistema externo>>
 actor "Usuário" as Usuario
 actor  Aluno
 actor  Professor
@@ -20,7 +21,6 @@ rectangle "Sistema de Moeda Estudantil" {
     usecase "Enviar moedas" as UC04
     usecase "Notificar Aluno" as UC05
     usecase "Trocar Moedas" as UC06
-    usecase "Informar motivo do envio de moedas" as UC07
     usecase "Consultar extrato da conta" as UC08
     usecase "Informar lista de professores" as UC09
     usecase "Cadastrar conta" as UC10
@@ -36,17 +36,17 @@ Aluno --> UC02
 Aluno --> UC03
 Aluno --> UC06
 Aluno --> UC08
+UC06 ..> UC05 : <<include>>
+UC04 ..> UC05 : <<include>>
 
 Professor --> UC04
-Professor --> UC07
 Professor --> UC08
 Professor --> UC13
+UC13 --> Relogio
 
-Sistema_de_email --> UC05
-UC05 --> Aluno
+UC05 -->  Sistema_de_email 
 
 Instituicao --> UC09
-
 Empresa --> UC10
 Empresa --> UC11
 @enduml
