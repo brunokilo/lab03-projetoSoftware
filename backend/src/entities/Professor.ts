@@ -2,6 +2,9 @@ import { Column, Entity, JoinColumn, ManyToOne, OneToOne } from "typeorm";
 import { Usuario } from "./Usuario";
 import { InstituicaoEnsino } from "./InstituicaoEnsino";
 import { ContaMoedas } from "./ContaMoedas";
+import { TransacaoEnvio } from "./TransacaoEnvio";
+import type { Aluno } from "./Aluno";
+import { AppError } from "../errors/AppError";
 
 @Entity("professor")
 export class Professor extends Usuario {
@@ -31,5 +34,27 @@ export class Professor extends Usuario {
     this.conta.creditar(Professor.CREDITO_SEMESTRAL);
     this.ultimoSemestreCreditado = semestre;
     return true;
+  }
+
+  // Debita da conta do professor e credita na do aluno, que precisa ser da mesma instituição
+  enviarMoedas(aluno: Aluno, valor: number, motivo: string) {
+    if (!motivo.trim()) throw new AppError("Informe o motivo do reconhecimento");
+    if (aluno.instituicao.id !== this.instituicao.id) {
+      throw new AppError("O professor só pode enviar moedas para alunos da própria instituição");
+    }
+    if (!aluno.conta) throw new AppError("O aluno ainda não tem conta de moedas");
+    if (Number.isInteger(valor) && valor > 0 && !this.conta.possuiSaldo(valor)) {
+      throw new AppError(`Saldo insuficiente: o professor tem ${this.conta.saldo} moedas`);
+    }
+
+    this.conta.debitar(valor);
+    aluno.conta.creditar(valor);
+
+    const envio = new TransacaoEnvio();
+    envio.professor = this;
+    envio.aluno = aluno;
+    envio.valor = valor;
+    envio.motivo = motivo.trim();
+    return envio;
   }
 }

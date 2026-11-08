@@ -1,8 +1,10 @@
 import { Request, Response } from "express";
 import { AlunoService } from "../services/AlunoService";
+import { TransacaoService } from "../services/TransacaoService";
 
 export class AlunoController {
   private service = new AlunoService();
+  private transacoes = new TransacaoService();
 
   listar = async (_req: Request, res: Response) => {
     res.json(await this.service.listar());
@@ -23,5 +25,9 @@ export class AlunoController {
   remover = async (req: Request<{ id: string }>, res: Response) => {
     await this.service.remover(req.params.id);
     res.status(204).send();
+  };
+
+  extrato = async (req: Request<{ id: string }>, res: Response) => {
+    res.json(await this.transacoes.extratoAluno(req.params.id));
   };
 }

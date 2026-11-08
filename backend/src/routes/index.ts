@@ -12,6 +12,7 @@ routes.get("/alunos/:id", alunos.buscar);
 routes.post("/alunos", alunos.criar);
 routes.put("/alunos/:id", alunos.atualizar);
 routes.delete("/alunos/:id", alunos.remover);
+routes.get("/alunos/:id/extrato", alunos.extrato);
 
 const empresas = new EmpresaController();
 routes.get("/empresas", empresas.listar);
@@ -24,6 +25,8 @@ const professores = new ProfessorController();
 routes.get("/professores", professores.listar);
 routes.post("/professores/credito-semestral", professores.creditarSemestre);
 routes.get("/professores/:id", professores.buscar);
+routes.post("/professores/:id/envios", professores.enviarMoedas);
+routes.get("/professores/:id/extrato", professores.extrato);
 
 const instituicoes = new InstituicaoController();
 routes.get("/instituicoes", instituicoes.listar);
