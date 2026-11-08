@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import { ProfessorRepository } from "../repositories/ProfessorRepository";
 import { InstituicaoRepository } from "../repositories/InstituicaoRepository";
+import { ContaMoedas } from "../entities/ContaMoedas";
 
 const SENHA_PADRAO = "senha123";
 const SALDO_INICIAL = 1000;
@@ -11,7 +12,7 @@ interface ProfessorInicial {
   cpf: string;
   departamento: string;
 }
-//Nota sobre uso de IA: A ferramenta Claude da Anthropic quem gerou os nomes, cpfs e emails de professores
+// Nota sobre uso de IA: A ferramenta Claude da Anthropic quem gerou os nomes, cpfs e emails de professores
 // Lista de professores de cada instituição envia ao firmar a parceria
 const PROFESSORES_POR_INSTITUICAO: Record<string, ProfessorInicial[]> = {
   "PUC Minas": [
@@ -70,7 +71,9 @@ export class ProfessorService {
     const professores = [];
     for (const instituicao of await this.instituicoes.listar()) {
       for (const dados of PROFESSORES_POR_INSTITUICAO[instituicao.nome] ?? []) {
-        professores.push({ ...dados, senha, saldo: SALDO_INICIAL, instituicao });
+        const conta = new ContaMoedas();
+        conta.creditar(SALDO_INICIAL);
+        professores.push({ ...dados, senha, conta, instituicao });
       }
     }
     if (professores.length === 0) return;

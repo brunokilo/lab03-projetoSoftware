@@ -1,6 +1,7 @@
 import { AppDataSource } from "../data-source";
 import { Aluno } from "../entities/Aluno";
 import { Endereco } from "../entities/Endereco";
+import { ContaMoedas } from "../entities/ContaMoedas";
 
 export class AlunoRepository {
   private get repo() {
@@ -22,5 +23,6 @@ export class AlunoRepository {
   async remover(aluno: Aluno) {
     await this.repo.delete(aluno.id);
     await AppDataSource.getRepository(Endereco).delete(aluno.endereco.id);
+    await AppDataSource.getRepository(ContaMoedas).delete(aluno.conta.id);
   }
 }

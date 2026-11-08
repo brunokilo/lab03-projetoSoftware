@@ -4,6 +4,7 @@ import { InstituicaoRepository } from "../repositories/InstituicaoRepository";
 import { ContaRepository } from "../repositories/ContaRepository";
 import { Aluno } from "../entities/Aluno";
 import { Endereco } from "../entities/Endereco";
+import { ContaMoedas } from "../entities/ContaMoedas";
 import { AppError } from "../errors/AppError";
 
 export interface AlunoDados {
@@ -52,6 +53,7 @@ export class AlunoService {
     aluno.curso = dados.curso!;
     aluno.instituicao = await this.obterInstituicao(dados.instituicaoId!);
     aluno.endereco = Object.assign(new Endereco(), dados.endereco);
+    aluno.conta = new ContaMoedas();
 
     return semSenha(await this.repository.salvar(aluno));
   }
