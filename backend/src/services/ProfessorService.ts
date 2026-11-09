@@ -63,7 +63,6 @@ export class ProfessorService {
   private repository = new ProfessorRepository();
   private instituicoes = new InstituicaoRepository();
 
-  // Professores não têm CRUD, entram só por aqui, simulando a lista enviada pelas instituições
   async popularInicial() {
     if ((await this.repository.contar()) > 0) return;
 
