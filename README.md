@@ -79,9 +79,9 @@ O projeto está **em desenvolvimento**. A tabela mostra a situação de cada req
 | Cadastro de vantagens (descrição, foto e custo) | 🟡 Parcial | Entidade `Vantagem` modelada no banco; ainda sem rotas e telas |
 | Professores pré-cadastrados (nome, CPF, departamento) | 🟡 Parcial | Entidade `Professor` e carga inicial com 2 professores por instituição; sem CRUD, como pede o enunciado |
 | Distribuição semestral de 1.000 moedas com saldo acumulável | ⏳ Pendente | |
-| Envio de moedas com motivo obrigatório | ⏳ Pendente | |
-| Notificação do aluno por e-mail | ⏳ Pendente | |
-| Extrato de professores e alunos | ⏳ Pendente | |
+| Envio de moedas com motivo obrigatório | ✅ Implementado | Débito, crédito e registro numa única transação do banco; telas e API |
+| Notificação por e-mail (professor e aluno) | ✅ Implementado | Um template para o professor e outro para o aluno; em desenvolvimento usa o Ethereal (ver [E-mail](#-e-mail)) |
+| Extrato de professores e alunos | ✅ Implementado | Saldo e movimentações; preparado para incluir as trocas por vantagens |
 | Resgate de vantagens com cupom e código por e-mail | ⏳ Pendente | |
 | Login e autenticação | 🟡 Parcial | Login de aluno, professor e empresa com JWT e middleware `autenticar`; as rotas de moedas e extrato vão usá-lo. Os CRUDs de alunos e empresas ainda não exigem token |
 
@@ -174,6 +174,9 @@ Por padrão, a API responde em `http://localhost:3000`. Todas as rotas trabalham
 | `GET` | `/` | Verifica se a API está no ar |
 | `POST` | `/login` | Autentica com `email` e `senha` e devolve `{ token, usuario }` |
 | `GET` | `/me` | Dados de quem está logado (exige `Authorization: Bearer <token>`) |
+| `POST` | `/moedas/enviar` | Professor envia moedas a um aluno (`alunoId`, `valor`, `motivo`); o professor vem do token |
+| `GET` | `/moedas/saldo` | Saldo de quem está logado (professor ou aluno) |
+| `GET` | `/moedas/extrato` | Saldo e movimentações de quem está logado (professor ou aluno) |
 | `GET` | `/instituicoes` | Lista as instituições de ensino |
 | `GET` | `/alunos` | Lista os alunos |
 | `GET` | `/alunos/:id` | Busca um aluno |
@@ -258,6 +261,15 @@ JWT_EXPIRES_IN=8h
 | `PORT` | Porta da API | `3000` |
 | `JWT_SECRET` | Segredo usado para assinar os tokens de login (obrigatório: sem ele a API não sobe) | — |
 | `JWT_EXPIRES_IN` | Validade do token | `8h` |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM` | Servidor SMTP para os e-mails (opcionais; ver [E-mail](#-e-mail)) | Ethereal (teste) |
+
+#### 📧 E-mail
+
+A cada envio de moedas o sistema manda dois e-mails: uma **confirmação para o professor** e um **aviso de recebimento para o aluno**, cada um com o seu template (`backend/src/templates/email/`).
+
+* **Sem configurar nada**, o back-end usa o [Ethereal](https://ethereal.email/), um servidor de testes. Os e-mails não chegam a ninguém: o terminal do back-end mostra um link de pré-visualização para cada mensagem. É preciso ter internet.
+* **Para enviar de verdade**, preencha `SMTP_HOST` (e `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`) no `backend/.env`. Com Gmail, use uma senha de app.
+* Se o e-mail falhar, o envio das moedas **não é desfeito**: o erro aparece só no log do back-end.
 
 #### Usuários de teste
 
