@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from "react";
 import Icone, { type NomeIcone } from "./Icone";
-import { titulos, type Pagina } from "../rotas";
+import { podeAcessar, titulos, type Pagina } from "../rotas";
 import type { Perfil, Usuario } from "../types";
 import Avatar from "./Avatar";
 
@@ -10,19 +10,27 @@ const rotuloPerfil: Record<Perfil, string> = {
   empresa: "Empresa parceira",
 };
 
-const menu: { secao: string; itens: { pagina: Pagina; rotulo: string; icone: NomeIcone }[] }[] = [
-  {
-    secao: "Geral",
-    itens: [{ pagina: "visao-geral", rotulo: "Visão geral", icone: "painel" }],
-  },
-  {
-    secao: "Cadastros",
-    itens: [
-      { pagina: "alunos", rotulo: "Alunos", icone: "aluno" },
-      { pagina: "empresas", rotulo: "Empresas parceiras", icone: "empresa" },
-    ],
-  },
-];
+type GrupoMenu = { secao: string; itens: { pagina: Pagina; rotulo: string; icone: NomeIcone }[] };
+
+// O grupo "Moedas" muda conforme o perfil de quem está logado
+function menuDo(perfil: Perfil): GrupoMenu[] {
+  const moedas = [
+    { pagina: "enviar-moedas" as const, rotulo: "Enviar moedas", icone: "enviar" as const },
+    { pagina: "extrato" as const, rotulo: "Extrato", icone: "livro" as const },
+  ].filter((item) => podeAcessar(item.pagina, perfil));
+
+  return [
+    { secao: "Geral", itens: [{ pagina: "visao-geral", rotulo: "Visão geral", icone: "painel" }] },
+    ...(moedas.length > 0 ? [{ secao: "Moedas", itens: moedas }] : []),
+    {
+      secao: "Cadastros",
+      itens: [
+        { pagina: "alunos", rotulo: "Alunos", icone: "aluno" },
+        { pagina: "empresas", rotulo: "Empresas parceiras", icone: "empresa" },
+      ],
+    },
+  ];
+}
 
 interface Props {
   pagina: Pagina;
@@ -59,7 +67,7 @@ export default function Layout({ pagina, servidorOnline, usuario, aoSair, childr
         </a>
 
         <nav className="menu" aria-label="Navegação principal">
-          {menu.map((grupo) => (
+          {menuDo(usuario.perfil).map((grupo) => (
             <div key={grupo.secao} className="menu-grupo">
               <span className="menu-secao">{grupo.secao}</span>
               {grupo.itens.map((item) => (

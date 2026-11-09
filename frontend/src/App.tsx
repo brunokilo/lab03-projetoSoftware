@@ -2,13 +2,15 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { api, guardarToken, lerToken, limparToken, SESSAO_EXPIRADA } from "./api";
 import type { Aluno, Aviso, Empresa, Instituicao, TipoAviso, Usuario } from "./types";
 import { navegar, useRota } from "./hooks/useRota";
-import { lerPagina, titulos } from "./rotas";
+import { lerPagina, podeAcessar, titulos } from "./rotas";
 import Layout from "./components/Layout";
 import Avisos from "./components/Avisos";
 import Icone from "./components/Icone";
 import VisaoGeral from "./pages/VisaoGeral";
 import Alunos from "./pages/Alunos";
 import Empresas from "./pages/Empresas";
+import EnviarMoedas from "./pages/EnviarMoedas";
+import Extrato from "./pages/Extrato";
 import Login from "./pages/Login";
 
 // Controla a sessão: sem usuário logado só aparece o login
@@ -50,7 +52,10 @@ export default function App() {
 
 // PAINEL CARREGANDO OS DADOS PARA QUE O PROGRAMA NAO FIQUE DANDO GET SEMPRE QUE TROCAR DE PAGINA
 function Painel({ usuario, aoSair }: { usuario: Usuario; aoSair: () => void }) {
-  const { pagina, novo } = lerPagina(useRota());
+  const rota = lerPagina(useRota());
+  // Quem abre por URL uma página que o perfil não pode usar volta para a visão geral
+  const pagina = podeAcessar(rota.pagina, usuario.perfil) ? rota.pagina : "visao-geral";
+  const novo = rota.novo && pagina === rota.pagina;
   const [alunos, setAlunos] = useState<Aluno[]>([]);
   const [empresas, setEmpresas] = useState<Empresa[]>([]);
   const [instituicoes, setInstituicoes] = useState<Instituicao[]>([]);
@@ -192,6 +197,11 @@ function Painel({ usuario, aoSair }: { usuario: Usuario; aoSair: () => void }) {
           aoRemover={removerEmpresa}
         />
       )}
+
+      {pagina === "enviar-moedas" && (
+        <EnviarMoedas alunos={alunos} carregando={carregando} notificar={notificar} />
+      )}
+      {pagina === "extrato" && <Extrato perfil={usuario.perfil} />}
 
       <Avisos avisos={avisos} aoFechar={fecharAviso} />
     </Layout>
