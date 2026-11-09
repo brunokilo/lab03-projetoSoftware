@@ -5,6 +5,7 @@ import { Professor } from "../entities/Professor";
 import { TransacaoEnvio } from "../entities/TransacaoEnvio";
 import { AppError } from "../errors/AppError";
 import { UsuarioLogado } from "./AuthService";
+import { EmailService } from "./EmailService";
 
 export interface EnvioDados {
   alunoId?: string;
@@ -15,6 +16,8 @@ export interface EnvioDados {
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export class MoedaService {
+  private emails = new EmailService();
+
   // Professor envia moedas a um aluno. Debitar, creditar e registrar a transação acontecem juntos:
   // se qualquer passo falhar, nada é gravado
   async enviar(professorId: string, dados: EnvioDados) {
@@ -28,7 +31,7 @@ export class MoedaService {
     if (!motivo) throw new AppError("O motivo do reconhecimento é obrigatório");
     if (motivo.length > 500) throw new AppError("O motivo deve ter no máximo 500 caracteres");
 
-    return AppDataSource.transaction(async (manager) => {
+    const { resposta, aviso } = await AppDataSource.transaction(async (manager) => {
       const professor = await manager.findOne(Professor, { where: { id: professorId } });
       if (!professor) throw new AppError("Professor não encontrado", 404);
       const aluno = UUID.test(alunoId) ? await manager.findOne(Aluno, { where: { id: alunoId } }) : null;
@@ -51,14 +54,30 @@ export class MoedaService {
       await manager.save(envio);
 
       return {
-        id: envio.id,
-        dataHora: envio.dataHora,
-        valor: envio.valor,
-        motivo: envio.motivo,
-        aluno: { id: aluno.id, nome: aluno.nome },
-        saldoProfessor: contaProfessor.saldo,
+        resposta: {
+          id: envio.id,
+          dataHora: envio.dataHora,
+          valor: envio.valor,
+          motivo: envio.motivo,
+          aluno: { id: aluno.id, nome: aluno.nome },
+          saldoProfessor: contaProfessor.saldo,
+        },
+        aviso: {
+          professor: { nome: professor.nome, email: professor.email },
+          aluno: { nome: aluno.nome, email: aluno.email },
+          valor,
+          motivo,
+          saldoProfessor: contaProfessor.saldo,
+          saldoAluno: contaAluno.saldo,
+        },
       };
     });
+
+    // Só chega aqui se a transação foi gravada. O e-mail roda em segundo plano: se falhar, as moedas
+    // continuam enviadas e o erro só vai para o log
+    void this.emails.notificarEnvioMoedas(aviso).catch((erro) => console.error("Falha ao enviar e-mails:", erro));
+
+    return resposta;
   }
 
   // Saldo de quem está logado (aluno ou professor)
