@@ -2,6 +2,7 @@ import { Column, Entity, JoinColumn, ManyToOne, OneToOne } from "typeorm";
 import { Usuario } from "./Usuario";
 import { InstituicaoEnsino } from "./InstituicaoEnsino";
 import { Endereco } from "./Endereco";
+import { ContaMoedas } from "./ContaMoedas";
 
 @Entity("aluno")
 export class Aluno extends Usuario {
@@ -21,4 +22,8 @@ export class Aluno extends Usuario {
   @OneToOne(() => Endereco, { cascade: true, eager: true, onDelete: "CASCADE" })
   @JoinColumn({ name: "endereco_id" })
   endereco: Endereco;
+
+  @OneToOne(() => ContaMoedas, { cascade: true, eager: true, nullable: false })
+  @JoinColumn({ name: "conta_id" })
+  conta: ContaMoedas;
 }

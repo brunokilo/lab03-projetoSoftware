@@ -116,6 +116,13 @@ const caminhos = {
     </>
   ),
   enviar: <path d="m22 2-7 20-4-9-9-4Zm0 0L11 13" />,
+  sair: (
+    <>
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+      <path d="m16 17 5-5-5-5" />
+      <path d="M21 12H9" />
+    </>
+  ),
 } satisfies Record<string, ReactNode>;
 
 export type NomeIcone = keyof typeof caminhos;

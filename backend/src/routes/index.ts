@@ -2,8 +2,20 @@ import { Router } from "express";
 import { AlunoController } from "../controllers/AlunoController";
 import { EmpresaController } from "../controllers/EmpresaController";
 import { InstituicaoController } from "../controllers/InstituicaoController";
+import { AuthController } from "../controllers/AuthController";
+import { MoedaController } from "../controllers/MoedaController";
+import { autenticar, exigirPerfil } from "../middlewares/autenticar";
 
 const routes = Router();
+
+const auth = new AuthController();
+routes.post("/login", auth.login);
+routes.get("/me", autenticar, auth.me);
+
+const moedas = new MoedaController();
+routes.post("/moedas/enviar", autenticar, exigirPerfil("professor"), moedas.enviar);
+routes.get("/moedas/extrato", autenticar, exigirPerfil("professor", "aluno"), moedas.extrato);
+routes.get("/moedas/saldo", autenticar, exigirPerfil("professor", "aluno"), moedas.saldo);
 
 const alunos = new AlunoController();
 routes.get("/alunos", alunos.listar);

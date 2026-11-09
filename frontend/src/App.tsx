@@ -1,18 +1,61 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { api } from "./api";
-import type { Aluno, Aviso, Empresa, Instituicao, TipoAviso } from "./types";
-import { useRota } from "./hooks/useRota";
-import { lerPagina, titulos } from "./rotas";
+import { api, guardarToken, lerToken, limparToken, SESSAO_EXPIRADA } from "./api";
+import type { Aluno, Aviso, Empresa, Instituicao, TipoAviso, Usuario } from "./types";
+import { navegar, useRota } from "./hooks/useRota";
+import { lerPagina, podeAcessar, titulos } from "./rotas";
 import Layout from "./components/Layout";
 import Avisos from "./components/Avisos";
 import Icone from "./components/Icone";
 import VisaoGeral from "./pages/VisaoGeral";
 import Alunos from "./pages/Alunos";
 import Empresas from "./pages/Empresas";
+import EnviarMoedas from "./pages/EnviarMoedas";
+import Extrato from "./pages/Extrato";
+import Login from "./pages/Login";
 
-// APP CARREGANDO OS DADOS PARA QUE O PROGRAMA NAO FIQUE DANDO GET SEMPRE QUE TROCAR DE PAGINA
+// Controla a sessão: sem usuário logado só aparece o login
 export default function App() {
-  const { pagina, novo } = lerPagina(useRota());
+  const [usuario, setUsuario] = useState<Usuario | null>(null);
+  // Se há token guardado, confirma com a API (GET /me) antes de decidir entre login e painel
+  const [verificando, setVerificando] = useState(() => Boolean(lerToken()));
+
+  useEffect(() => {
+    if (!lerToken()) return;
+    api<Usuario>("/me")
+      .then(setUsuario)
+      .catch(() => {})
+      .finally(() => setVerificando(false));
+  }, []);
+
+  // A API recusou o token em alguma chamada: volta para o login
+  useEffect(() => {
+    const expirou = () => setUsuario(null);
+    window.addEventListener(SESSAO_EXPIRADA, expirou);
+    return () => window.removeEventListener(SESSAO_EXPIRADA, expirou);
+  }, []);
+
+  function entrar(token: string, logado: Usuario) {
+    guardarToken(token);
+    setUsuario(logado);
+  }
+
+  function sair() {
+    limparToken();
+    setUsuario(null);
+    navegar("/");
+  }
+
+  if (verificando) return <div className="tela-verificando">Verificando sessão…</div>;
+  if (!usuario) return <Login aoEntrar={entrar} />;
+  return <Painel usuario={usuario} aoSair={sair} />;
+}
+
+// PAINEL CARREGANDO OS DADOS PARA QUE O PROGRAMA NAO FIQUE DANDO GET SEMPRE QUE TROCAR DE PAGINA
+function Painel({ usuario, aoSair }: { usuario: Usuario; aoSair: () => void }) {
+  const rota = lerPagina(useRota());
+  // Quem abre por URL uma página que o perfil não pode usar volta para a visão geral
+  const pagina = podeAcessar(rota.pagina, usuario.perfil) ? rota.pagina : "visao-geral";
+  const novo = rota.novo && pagina === rota.pagina;
   const [alunos, setAlunos] = useState<Aluno[]>([]);
   const [empresas, setEmpresas] = useState<Empresa[]>([]);
   const [instituicoes, setInstituicoes] = useState<Instituicao[]>([]);
@@ -109,7 +152,7 @@ export default function App() {
   }
 
   return (
-    <Layout pagina={pagina} servidorOnline={servidorOnline}>
+    <Layout pagina={pagina} servidorOnline={servidorOnline} usuario={usuario} aoSair={aoSair}>
       {erroConexao && (
         <div className="alerta-conexao" role="alert">
           <Icone nome="alerta" tamanho={20} />
@@ -154,6 +197,11 @@ export default function App() {
           aoRemover={removerEmpresa}
         />
       )}
+
+      {pagina === "enviar-moedas" && (
+        <EnviarMoedas alunos={alunos} carregando={carregando} notificar={notificar} />
+      )}
+      {pagina === "extrato" && <Extrato perfil={usuario.perfil} />}
 
       <Avisos avisos={avisos} aoFechar={fecharAviso} />
     </Layout>

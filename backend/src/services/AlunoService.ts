@@ -1,8 +1,10 @@
 import bcrypt from "bcryptjs";
 import { AlunoRepository } from "../repositories/AlunoRepository";
 import { InstituicaoRepository } from "../repositories/InstituicaoRepository";
+import { ContaRepository } from "../repositories/ContaRepository";
 import { Aluno } from "../entities/Aluno";
 import { Endereco } from "../entities/Endereco";
+import { ContaMoedas } from "../entities/ContaMoedas";
 import { AppError } from "../errors/AppError";
 
 export interface AlunoDados {
@@ -24,6 +26,7 @@ function semSenha(aluno: Aluno) {
 export class AlunoService {
   private repository = new AlunoRepository();
   private instituicoes = new InstituicaoRepository();
+  private contas = new ContaRepository();
 
   async listar() {
     return (await this.repository.listar()).map(semSenha);
@@ -39,6 +42,7 @@ export class AlunoService {
       if (!dados[campo]) throw new AppError(`O campo ${campo} é obrigatório`);
     }
     this.validarEndereco(dados.endereco);
+    await this.validarEmailLivre(dados.email!);
 
     const aluno = new Aluno();
     aluno.nome = dados.nome!;
@@ -49,6 +53,7 @@ export class AlunoService {
     aluno.curso = dados.curso!;
     aluno.instituicao = await this.obterInstituicao(dados.instituicaoId!);
     aluno.endereco = Object.assign(new Endereco(), dados.endereco);
+    aluno.conta = new ContaMoedas();
 
     return semSenha(await this.repository.salvar(aluno));
   }
@@ -57,7 +62,10 @@ export class AlunoService {
     const aluno = await this.obter(id);
 
     if (dados.nome) aluno.nome = dados.nome;
-    if (dados.email) aluno.email = dados.email;
+    if (dados.email) {
+      await this.validarEmailLivre(dados.email);
+      aluno.email = dados.email;
+    }
     if (dados.senha) aluno.senha = await bcrypt.hash(dados.senha, 10);
     if (dados.cpf) aluno.cpf = dados.cpf;
     if (dados.rg) aluno.rg = dados.rg;
@@ -83,6 +91,13 @@ export class AlunoService {
     const instituicao = await this.instituicoes.buscarPorId(id);
     if (!instituicao) throw new AppError("Instituição não encontrada", 404);
     return instituicao;
+  }
+
+  // O login identifica a pessoa só pelo e-mail, então ele não pode existir em professor ou empresa
+  private async validarEmailLivre(email: string) {
+    if (await this.contas.emailEmUsoEmOutroPerfil(email, "aluno")) {
+      throw new AppError("Já existe um cadastro com esse email", 409);
+    }
   }
 
   private validarEndereco(endereco?: Partial<Endereco>) {

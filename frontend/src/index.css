@@ -1300,3 +1300,218 @@ tbody tr:hover {
     flex: 1;
   }
 }
+
+/* ===== Login e sessão ===== */
+.tela-verificando {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  color: var(--texto-3);
+}
+
+.pagina-login {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  padding: 24px 16px;
+}
+
+.cartao-login {
+  width: 100%;
+  max-width: 400px;
+  padding: 32px;
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  border-radius: 14px;
+  box-shadow: var(--sombra-grande);
+}
+
+.cartao-login h1 {
+  margin: 24px 0 4px;
+  font-size: 22px;
+}
+
+.cartao-login form {
+  margin-top: 20px;
+}
+
+.cartao-login .grade-form {
+  margin-bottom: 20px;
+}
+
+.cartao-login .campo {
+  grid-column: span 12;
+}
+
+.login-marca {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.login-marca strong {
+  display: block;
+  font-size: 15px;
+}
+
+.login-marca small {
+  display: block;
+  font-size: 12px;
+  color: var(--texto-3);
+}
+
+.botao-bloco {
+  width: 100%;
+}
+
+.login-rodape {
+  margin: 20px 0 0;
+  text-align: center;
+  color: var(--texto-3);
+}
+
+.link-botao {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--primaria);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.link-botao:hover:not(:disabled) {
+  text-decoration: underline;
+}
+
+.link-botao:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.aviso-sucesso {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 20px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: #ecfdf3;
+  border: 1px solid #abefc6;
+  color: #067647;
+  font-size: 13px;
+}
+
+.aviso-sucesso svg {
+  flex-shrink: 0;
+}
+
+.topo-direita {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-left: auto;
+}
+
+.topo-direita .data-hoje {
+  margin-left: 0;
+}
+
+.usuario-logado {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  line-height: 1.25;
+}
+
+.usuario-logado strong {
+  display: block;
+  font-size: 13px;
+}
+
+.usuario-logado small {
+  display: block;
+  font-size: 12px;
+  color: var(--texto-3);
+}
+
+@media (max-width: 640px) {
+  .cartao-login {
+    padding: 24px 20px;
+  }
+
+  .usuario-logado div {
+    display: none;
+  }
+}
+
+/* ===== Moedas: envio e extrato ===== */
+textarea {
+  width: 100%;
+  min-height: 96px;
+  padding: 10px 12px;
+  border: 1px solid var(--borda-forte);
+  border-radius: 8px;
+  background: var(--superficie);
+  color: var(--texto);
+  font: inherit;
+  resize: vertical;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+textarea::placeholder {
+  color: #98a2b3;
+}
+
+textarea:focus {
+  outline: none;
+  border-color: var(--primaria);
+  box-shadow: var(--foco);
+}
+
+textarea[aria-invalid="true"] {
+  border-color: var(--perigo);
+}
+
+.saldo-destaque {
+  max-width: 280px;
+  margin-bottom: 20px;
+}
+
+.formulario-pagina {
+  max-width: 640px;
+  padding: 20px;
+}
+
+.formulario-rodape {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+th.direita,
+td.direita {
+  text-align: right;
+}
+
+td.motivo {
+  max-width: 420px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.valor-entrada {
+  color: var(--sucesso);
+  font-weight: 600;
+}
+
+.valor-saida {
+  color: var(--perigo-escuro);
+  font-weight: 600;
+}
+
+@media (max-width: 640px) {
+  .saldo-destaque {
+    max-width: none;
+  }
+}

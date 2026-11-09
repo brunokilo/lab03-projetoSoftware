@@ -1,5 +1,6 @@
 import bcrypt from "bcryptjs";
 import { EmpresaRepository } from "../repositories/EmpresaRepository";
+import { ContaRepository } from "../repositories/ContaRepository";
 import { Empresa } from "../entities/Empresa";
 import { AppError } from "../errors/AppError";
 
@@ -17,6 +18,7 @@ function semSenha(empresa: Empresa) {
 
 export class EmpresaService {
   private repository = new EmpresaRepository();
+  private contas = new ContaRepository();
 
   async listar() {
     return (await this.repository.listar()).map(semSenha);
@@ -32,6 +34,8 @@ export class EmpresaService {
       if (!dados[campo]) throw new AppError(`O campo ${campo} é obrigatório`);
     }
 
+    await this.validarEmailLivre(dados.email!);
+
     const empresa = new Empresa();
     empresa.nome = dados.nome!;
     empresa.email = dados.email!;
@@ -45,7 +49,10 @@ export class EmpresaService {
     const empresa = await this.obter(id);
 
     if (dados.nome) empresa.nome = dados.nome;
-    if (dados.email) empresa.email = dados.email;
+    if (dados.email) {
+      await this.validarEmailLivre(dados.email);
+      empresa.email = dados.email;
+    }
     if (dados.senha) empresa.senha = await bcrypt.hash(dados.senha, 10);
     if (dados.cnpj) empresa.cnpj = dados.cnpj;
 
@@ -55,6 +62,13 @@ export class EmpresaService {
   async remover(id: string) {
     await this.obter(id);
     await this.repository.remover(id);
+  }
+
+  // O login identifica a pessoa só pelo e-mail, então ele não pode existir em aluno ou professor
+  private async validarEmailLivre(email: string) {
+    if (await this.contas.emailEmUsoEmOutroPerfil(email, "empresa")) {
+      throw new AppError("Já existe um cadastro com esse email", 409);
+    }
   }
 
   private async obter(id: string) {
