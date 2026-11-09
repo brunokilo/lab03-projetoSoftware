@@ -26,6 +26,7 @@ export class MoedaService {
       throw new AppError("A quantidade de moedas deve ser um número inteiro maior que zero");
     }
     if (!motivo) throw new AppError("O motivo do reconhecimento é obrigatório");
+    if (motivo.length > 500) throw new AppError("O motivo deve ter no máximo 500 caracteres");
 
     return AppDataSource.transaction(async (manager) => {
       const professor = await manager.findOne(Professor, { where: { id: professorId } });
@@ -70,6 +71,36 @@ export class MoedaService {
           : null;
     if (!dono) throw new AppError("Esse perfil não possui conta de moedas", 404);
     return { saldo: dono.conta.saldo };
+  }
+
+  // Extrato de quem está logado: saldo atual e as movimentações, da mais recente para a mais antiga.
+  // Professor: os envios que fez (saída). Aluno: as moedas que recebeu (entrada).
+  // As trocas por vantagens (Resgate, S03) entram aqui como outro tipo de movimentação do aluno.
+  async extrato(logado: UsuarioLogado) {
+    const { saldo } = await this.saldo(logado);
+    const envios = AppDataSource.getRepository(TransacaoEnvio);
+    const professor = logado.perfil === "professor";
+
+    const lista = professor
+      ? await envios.find({ where: { professor: { id: logado.id } }, relations: { aluno: true } })
+      : await envios.find({ where: { aluno: { id: logado.id } }, relations: { professor: true } });
+
+    const transacoes = lista
+      .map((envio) => {
+        const outro = professor ? envio.aluno : envio.professor;
+        return {
+          id: envio.id,
+          tipo: "ENVIO" as const,
+          sentido: professor ? ("saida" as const) : ("entrada" as const),
+          dataHora: envio.dataHora,
+          valor: envio.valor,
+          motivo: envio.motivo,
+          contraparte: { id: outro.id, nome: outro.nome },
+        };
+      })
+      .sort((a, b) => b.dataHora.getTime() - a.dataHora.getTime());
+
+    return { saldo, transacoes };
   }
 
   private async travarConta(manager: typeof AppDataSource.manager, id: string) {

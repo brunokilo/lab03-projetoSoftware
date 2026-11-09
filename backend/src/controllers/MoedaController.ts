@@ -9,6 +9,10 @@ export class MoedaController {
     res.status(201).json(await this.service.enviar(req.usuario!.id, req.body ?? {}));
   };
 
+  extrato = async (req: Request, res: Response) => {
+    res.json(await this.service.extrato(req.usuario!));
+  };
+
   saldo = async (req: Request, res: Response) => {
     res.json(await this.service.saldo(req.usuario!));
   };

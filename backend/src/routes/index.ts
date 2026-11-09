@@ -14,6 +14,7 @@ routes.get("/me", autenticar, auth.me);
 
 const moedas = new MoedaController();
 routes.post("/moedas/enviar", autenticar, exigirPerfil("professor"), moedas.enviar);
+routes.get("/moedas/extrato", autenticar, exigirPerfil("professor", "aluno"), moedas.extrato);
 routes.get("/moedas/saldo", autenticar, exigirPerfil("professor", "aluno"), moedas.saldo);
 
 const alunos = new AlunoController();
