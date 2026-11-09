@@ -25,7 +25,8 @@ entity Professor {
   * id : uuid <<PK, FK>>
   --
   * cpf : varchar(14) <<UQ>>
-  * departamento : varchar(255)
+  * departamento : varchar(120)
+  ultimo_semestre_creditado : varchar(6)
   * instituicao_id : uuid <<FK>>
   * conta_id : uuid <<FK, UQ>>
 }
@@ -114,4 +115,9 @@ Aluno ||--o{ Resgate
 Vantagem ||--o{ Resgate
 
 Empresa ||--o{ Vantagem
+
+legend bottom left
+  **Professor.ultimo_semestre_creditado** guarda o semestre do último crédito de 1.000 moedas
+  (ex.: 2026-2), para que o professor não receba o crédito duas vezes no mesmo semestre.
+endlegend
 @enduml

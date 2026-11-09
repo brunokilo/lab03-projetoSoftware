@@ -78,7 +78,7 @@ O projeto está **em desenvolvimento**. A tabela mostra a situação de cada req
 | Armazenamento seguro de senhas | ✅ Implementado | Hash com `bcryptjs`; a senha nunca é retornada pela API |
 | Cadastro de vantagens (descrição, foto e custo) | 🟡 Parcial | Entidade `Vantagem` modelada no banco; ainda sem rotas e telas |
 | Professores pré-cadastrados (nome, CPF, departamento) | 🟡 Parcial | Entidade `Professor` e carga inicial com 2 professores por instituição; sem CRUD, como pede o enunciado |
-| Distribuição semestral de 1.000 moedas com saldo acumulável | ⏳ Pendente | |
+| Distribuição semestral de 1.000 moedas com saldo acumulável | ✅ Implementado | Automática ao iniciar o servidor e conferida uma vez por dia |
 | Envio de moedas com motivo obrigatório | ✅ Implementado | Débito, crédito e registro numa única transação do banco; telas e API |
 | Notificação por e-mail (professor e aluno) | ✅ Implementado | Um template para o professor e outro para o aluno; em desenvolvimento usa o Ethereal (ver [E-mail](#-e-mail)) |
 | Extrato de professores e alunos | ✅ Implementado | Saldo e movimentações; preparado para incluir as trocas por vantagens |
@@ -97,6 +97,7 @@ O projeto está **em desenvolvimento**. A tabela mostra a situação de cada req
 - 🔒 **Senhas protegidas:** são armazenadas com hash (`bcryptjs`) e removidas das respostas da API.
 - 🔑 **Login:** aluno, professor e empresa entram com e-mail e senha e recebem um token JWT. O e-mail é único entre os três perfis. A sessão é recuperada ao recarregar a página e há botão de sair.
 - 👨‍🏫 **Professores pré-cadastrados:** a carga inicial cria 2 professores por instituição, com saldo de 1.000 moedas.
+- 📅 **Crédito semestral:** cada professor recebe **1.000 moedas** por semestre (1º semestre de janeiro a junho, 2º de julho a dezembro). O servidor credita ao iniciar e confere uma vez por dia se começou um semestre novo. Cada professor recebe no máximo um crédito por semestre, mesmo que o crédito rode várias vezes ao mesmo tempo, e o saldo que sobrou se soma ao novo crédito.
 - 🚫 **Tratamento de erros:** a API responde com mensagens claras para campos obrigatórios, registros não encontrados (404) e e-mail, CPF ou CNPJ duplicados (409).
 - 📊 **Visão geral:** painel com os totais de alunos, empresas e instituições, os cadastros mais recentes e as etapas do programa de mérito.
 - 🧭 **Interface web:** menu lateral, rotas na URL via hash (`#/alunos`, `#/empresas`, `#/alunos/novo`), que mantêm a página ao recarregar, busca, paginação, modais de confirmação, avisos de sucesso e erro, e indicação de quando o servidor está offline.
@@ -217,7 +218,7 @@ curl -X POST http://localhost:3000/alunos \
 
 | Status | Quando acontece |
 | :---: | :--- |
-| `400` | Falta um campo obrigatório |
+| `400` | Falta um campo obrigatório, um campo excede o tamanho permitido, o id não é válido ou o corpo não é um JSON válido |
 | `401` | Login inválido, ou token ausente, expirado ou inválido |
 | `403` | O perfil do usuário não tem permissão para a rota |
 | `404` | O aluno, a empresa ou a instituição não foi encontrado |

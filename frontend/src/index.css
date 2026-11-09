@@ -530,6 +530,9 @@ select {
 }
 
 .tabela-container {
+  /* position cria o bloco de contenção: sem ele, o .sr-only (absoluto) das colunas de ações
+     escapa da rolagem e alarga a página inteira no celular */
+  position: relative;
   overflow-x: auto;
 }
 

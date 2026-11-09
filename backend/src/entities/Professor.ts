@@ -19,4 +19,18 @@ export class Professor extends Usuario {
   @OneToOne(() => ContaMoedas, { cascade: true, eager: true, nullable: false })
   @JoinColumn({ name: "conta_id" })
   conta: ContaMoedas;
+
+  // Semestre do último crédito (ex.: "2026-2"), para não creditar duas vezes no mesmo semestre
+  @Column({ name: "ultimo_semestre_creditado", type: "varchar", length: 6, nullable: true })
+  ultimoSemestreCreditado: string | null;
+
+  static readonly CREDITO_SEMESTRAL = 1000;
+
+  // O saldo que sobrou continua na conta e soma com o crédito do novo semestre
+  receberCreditoSemestral(semestre: string) {
+    if (this.ultimoSemestreCreditado === semestre) return false;
+    this.conta.creditar(Professor.CREDITO_SEMESTRAL);
+    this.ultimoSemestreCreditado = semestre;
+    return true;
+  }
 }
