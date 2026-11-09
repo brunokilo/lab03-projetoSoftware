@@ -1,7 +1,7 @@
 @startuml
 
 abstract class Usuario {
-  - id: Long
+  - id: UUID
   - email: String
   - senha: String
   - nome: String
@@ -9,12 +9,12 @@ abstract class Usuario {
 }
 
 class InstituicaoEnsino {
-  - id: Long
+  - id: UUID
   - nome: String
 }
 
 class ContaMoedas {
-  - id: Long
+  - id: UUID
   - saldo: int
   + creditar(valor: int): void
   + debitar(valor: int): void
@@ -34,7 +34,8 @@ class Professor {
   - {static} CREDITO_SEMESTRAL: int = 1000
   - cpf: String
   - departamento: String
-  + receberCreditoSemestral(): void
+  - ultimoSemestreCreditado: String
+  + receberCreditoSemestral(semestre: String): boolean
   + enviarMoedas(aluno: Aluno, valor: int, motivo: String): TransacaoEnvio
   + consultarExtrato(): List<Transacao>
 }
@@ -55,7 +56,7 @@ class Endereco {
 }
 
 class Vantagem {
-  - id: Long
+  - id: UUID
   - descricao: String
   - foto: String
   - custoMoedas: int
@@ -63,7 +64,7 @@ class Vantagem {
 }
 
 abstract class Transacao {
-  - id: Long
+  - id: UUID
   - dataHora: LocalDateTime
   - valor: int
 }

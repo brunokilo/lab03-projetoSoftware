@@ -20,9 +20,12 @@ export class AlunoRepository {
     return this.repo.save(aluno);
   }
 
-  async remover(aluno: Aluno) {
-    await this.repo.delete(aluno.id);
-    await AppDataSource.getRepository(Endereco).delete(aluno.endereco.id);
-    await AppDataSource.getRepository(ContaMoedas).delete(aluno.conta.id);
+  // Aluno, endereço e conta saem juntos: se uma etapa falhar, nada é apagado
+  remover(aluno: Aluno) {
+    return AppDataSource.transaction(async (manager) => {
+      await manager.delete(Aluno, aluno.id);
+      if (aluno.endereco) await manager.delete(Endereco, aluno.endereco.id);
+      if (aluno.conta) await manager.delete(ContaMoedas, aluno.conta.id);
+    });
   }
 }
