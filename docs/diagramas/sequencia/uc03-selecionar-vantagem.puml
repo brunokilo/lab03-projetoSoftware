@@ -13,7 +13,7 @@ BD --> VantagemService : lista de vantagens
 VantagemService --> VantagemController : lista de vantagens
 VantagemController --> Frontend : 200 OK (lista)
 
-Frontend -> VantagemController : GET /vantagens/{id}
+Frontend -> VantagemController : 
 VantagemController -> VantagemService : buscar(id)
 VantagemService -> BD : buscar vantagem pelo id
 BD --> VantagemService : vantagem

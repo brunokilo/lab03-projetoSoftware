@@ -1,0 +1,28 @@
+@startuml sequencia_cadastrar_aluno
+title UC12 — Cadastrar aluno
+
+participant Frontend
+participant AlunoController
+participant AlunoService
+participant "Aluno" as AlunoClasse
+participant "ContaMoedas" as ContaClasse
+participant "Banco de dados" as BD
+
+Frontend -> AlunoController : 
+AlunoController -> AlunoService : criar(dados)
+AlunoService -> AlunoService : validar campos obrigatórios
+AlunoService -> AlunoService : validar endereço (rua, número, bairro, cidade, estado, cep)
+AlunoService -> BD : verificar se o e-mail já está em uso
+BD --> AlunoService : e-mail livre
+AlunoService -> AlunoClasse : new Aluno()
+AlunoService -> AlunoClasse : preencher dados e senha (bcrypt.hash)
+AlunoService -> BD : buscar instituição pelo id
+BD --> AlunoService : instituição
+AlunoService -> AlunoClasse : instituicao = instituição selecionada
+AlunoService -> ContaClasse : new ContaMoedas()
+AlunoService -> AlunoClasse : conta = nova conta (saldo 0)
+AlunoService -> BD : salvar aluno (com endereço e conta)
+BD --> AlunoService : aluno salvo
+AlunoService --> AlunoController : aluno (sem senha)
+AlunoController --> Frontend : 
+@enduml
