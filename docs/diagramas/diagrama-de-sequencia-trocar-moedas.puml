@@ -1,0 +1,23 @@
+@startuml sequencia_trocar_moedas
+title UC06 — Trocar moedas
+
+participant Frontend
+participant ResgateController
+participant ResgateService
+participant "Aluno" as AlunoClasse
+participant "Banco de dados" as BD
+participant EmailService
+
+Frontend -> ResgateController : 
+ResgateController -> ResgateService : resgatar(alunoId, vantagemId)
+ResgateService -> BD : buscar aluno e vantagem
+BD --> ResgateService : aluno, vantagem
+ResgateService -> ResgateService : validar vantagem ativa e saldo
+ResgateService -> AlunoClasse : conta.debitar(custoMoedas)
+AlunoClasse --> ResgateService : saldo atualizado
+ResgateService -> BD : salvar conta e registrar resgate (código do cupom)
+BD --> ResgateService : ok
+ResgateService -> EmailService : notificarResgate()
+ResgateService --> ResgateController : resgate (código do cupom)
+ResgateController --> Frontend : 
+@enduml
