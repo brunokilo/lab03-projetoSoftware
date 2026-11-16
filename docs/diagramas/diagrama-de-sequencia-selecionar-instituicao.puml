@@ -1,0 +1,29 @@
+@startuml sequencia_selecionar_instituicao
+title UC02 — Selecionar instituição
+
+participant Frontend
+participant InstituicaoController
+participant InstituicaoService
+participant "Banco de dados" as BD
+participant AlunoController
+participant AlunoService
+participant "Aluno" as AlunoClasse
+
+Frontend -> InstituicaoController : GET /instituicoes
+InstituicaoController -> InstituicaoService : listar()
+InstituicaoService -> BD : buscar instituições
+BD --> InstituicaoService : lista de instituições
+InstituicaoService --> InstituicaoController : lista de instituições
+InstituicaoController --> Frontend : 200 OK (lista)
+
+Frontend -> AlunoController : POST /alunos (..., instituicaoId)
+AlunoController -> AlunoService : criar(dados)
+AlunoService -> AlunoService : validar dados
+AlunoService -> BD : buscar instituição pelo id
+BD --> AlunoService : instituição
+AlunoService -> AlunoClasse : instituicao = instituição selecionada
+AlunoService -> BD : salvar aluno
+BD --> AlunoService : ok
+AlunoService --> AlunoController : aluno
+AlunoController --> Frontend : 201 Created
+@enduml

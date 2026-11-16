@@ -1,0 +1,26 @@
+@startuml sequencia_enviar_moedas
+title UC04 — Enviar moedas
+
+participant Frontend
+participant MoedaController
+participant MoedaService
+participant "Professor" as ProfessorClasse
+participant "Aluno" as AlunoClasse
+participant "Banco de dados" as BD
+participant EmailService
+
+Frontend -> MoedaController : POST /moedas/enviar (alunoId, valor, motivo)
+MoedaController -> MoedaService : enviar(professorId, dados)
+MoedaService -> MoedaService : validar dados
+MoedaService -> BD : buscar professor e aluno
+BD --> MoedaService : professor, aluno
+MoedaService -> ProfessorClasse : conta.debitar(valor)
+ProfessorClasse --> MoedaService : saldo atualizado
+MoedaService -> AlunoClasse : conta.creditar(valor)
+AlunoClasse --> MoedaService : saldo atualizado
+MoedaService -> BD : salvar contas e registrar transação
+BD --> MoedaService : ok
+MoedaService -> EmailService : notificarEnvioMoedas()
+MoedaService --> MoedaController : resposta
+MoedaController --> Frontend : 201 Created
+@enduml

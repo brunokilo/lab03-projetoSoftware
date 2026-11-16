@@ -1,0 +1,18 @@
+@startuml sequencia_consultar_extrato
+title UC08 — Consultar extrato da conta
+
+participant Frontend
+participant MoedaController
+participant MoedaService
+participant "Banco de dados" as BD
+
+Frontend -> MoedaController : GET /moedas/extrato
+MoedaController -> MoedaService : extrato(usuarioLogado)
+MoedaService -> BD : buscar saldo da conta do usuário
+BD --> MoedaService : saldo
+MoedaService -> BD : buscar transações do usuário
+BD --> MoedaService : transações
+MoedaService -> MoedaService : ordenar da mais recente para a mais antiga
+MoedaService --> MoedaController : saldo e transações
+MoedaController --> Frontend : 200 OK
+@enduml
