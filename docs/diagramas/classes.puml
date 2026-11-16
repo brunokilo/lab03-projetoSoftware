@@ -57,6 +57,7 @@ class Endereco {
 
 class Vantagem {
   - id: UUID
+  - nome: String
   - descricao: String
   - foto: String
   - custoMoedas: int
