@@ -9,3 +9,7 @@ Contribuição: Comecei o esboço inicial do projeto, criei as entities com o ty
 # Semana 3 
 
 Contribuição: Implementei o login de professor e aluno e implementei o ethereal para notificar os usuários sobre o envio de moedas.
+
+# Semana 4
+
+Contribuição: Fiz os diagramas de sequencia dos casos de uso do aluno.
