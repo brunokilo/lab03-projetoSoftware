@@ -6,9 +6,13 @@ export class Vantagem {
   @PrimaryGeneratedColumn("uuid")
   id: string;
 
+  @Column({ type: "varchar", length: 80 })
+  nome: string;
+
   @Column({ type: "text" })
   descricao: string;
 
+  // Caminho da foto servida pela API (ex.: /uploads/vantagens/<id>.png)
   @Column({ type: "varchar", length: 255, nullable: true })
   foto: string | null;
 

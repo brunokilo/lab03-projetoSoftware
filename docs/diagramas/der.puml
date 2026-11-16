@@ -64,6 +64,7 @@ entity "Conta de Moedas" as ContaMoedas {
 entity Vantagem {
   * id : uuid <<PK>>
   --
+  * nome : varchar(80)
   * descricao : text
   foto : varchar(255)
   * custo_moedas : integer

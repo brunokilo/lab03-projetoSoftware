@@ -7,6 +7,7 @@ import routes from "./routes";
 import { AppError } from "./errors/AppError";
 import { InstituicaoService } from "./services/InstituicaoService";
 import { ProfessorService } from "./services/ProfessorService";
+import { PASTA_UPLOADS } from "./services/FotoService";
 
 if (!process.env.JWT_SECRET) {
   console.error("Defina JWT_SECRET no arquivo .env do back-end");
@@ -15,7 +16,12 @@ if (!process.env.JWT_SECRET) {
 
 const app = express();
 app.use(cors());
-app.use(express.json());
+// Limite maior que o padrão (100 kB) porque a foto da vantagem chega em base64 no JSON
+app.use(express.json({ limit: "3mb" }));
+app.use("/uploads", express.static(PASTA_UPLOADS));
+app.use("/uploads", (_req, res) => {
+  res.status(404).json({ erro: "Arquivo não encontrado" });
+});
 
 app.get("/", (_req, res) => {
   res.json({ mensagem: "API Moeda Estudantil no ar" });
@@ -37,6 +43,9 @@ app.use((erro: any, _req: Request, res: Response, _next: NextFunction) => {
   // Texto maior que o tamanho da coluna (ex.: UF com 3 letras)
   if (erro?.code === "22001" || erro?.driverError?.code === "22001") {
     return res.status(400).json({ erro: "Um dos campos excede o tamanho permitido" });
+  }
+  if (erro?.type === "entity.too.large") {
+    return res.status(413).json({ erro: "A foto deve ter no máximo 2 MB" });
   }
   if (erro?.type === "entity.parse.failed") {
     return res.status(400).json({ erro: "O corpo da requisição não é um JSON válido" });

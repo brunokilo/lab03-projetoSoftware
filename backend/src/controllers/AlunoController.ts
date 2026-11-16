@@ -4,8 +4,8 @@ import { AlunoService } from "../services/AlunoService";
 export class AlunoController {
   private service = new AlunoService();
 
-  listar = async (_req: Request, res: Response) => {
-    res.json(await this.service.listar());
+  listarParaEnvio = async (_req: Request, res: Response) => {
+    res.json(await this.service.listarParaEnvio());
   };
 
   buscar = async (req: Request<{ id: string }>, res: Response) => {

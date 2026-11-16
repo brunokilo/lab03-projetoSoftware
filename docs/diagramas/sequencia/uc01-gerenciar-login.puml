@@ -1,0 +1,59 @@
+@startuml
+title UC01 · Gerenciar login (aluno, professor ou empresa)
+autonumber
+hide footbox
+skinparam responseMessageBelowArrow true
+
+actor "Usuário" as U
+boundary "Login.tsx" as Tela
+control "AuthController" as Ctrl
+participant "AuthService" as Serv
+participant "ContaRepository" as Repo
+database "PostgreSQL" as BD
+
+U -> Tela : informa e-mail e senha
+Tela -> Tela : valida formato do e-mail e senha preenchida
+Tela -> Ctrl : POST /login { email, senha }
+activate Ctrl
+Ctrl -> Serv : login(email, senha)
+activate Serv
+
+alt e-mail ou senha ausentes
+  Serv --> Ctrl : AppError 400
+else
+  Serv -> Repo : buscarPorEmail(email)
+  activate Repo
+  loop perfis aluno, professor e empresa (para no primeiro encontrado)
+    Repo -> BD : SELECT ... WHERE LOWER(email) = :email
+    BD --> Repo : linha ou nada
+  end
+  Repo --> Serv : conta { id, nome, email, senha, perfil } ou null
+  deactivate Repo
+  Serv -> Serv : bcrypt.compare(senha, conta.senha ?? HASH_FALSO)
+  alt conta inexistente ou senha errada
+    Serv --> Ctrl : AppError 401 "E-mail ou senha inválidos"
+  else credenciais corretas
+    Serv -> Serv : jwt.sign({ perfil }, JWT_SECRET, { subject: id, expiresIn: 8h })
+    Serv --> Ctrl : { token, usuario }
+  end
+end
+deactivate Serv
+
+alt sucesso
+  Ctrl --> Tela : 200 { token, usuario }
+  Tela -> Tela : guardarToken(token) no localStorage
+  Tela --> U : painel com o menu do perfil
+else erro
+  Ctrl --> Tela : 400/401 { erro }
+  Tela --> U : mensagem de erro
+end
+deactivate Ctrl
+
+== Sessão já aberta (página recarregada) ==
+Tela -> Ctrl : GET /me (Authorization: Bearer token)
+Ctrl -> Serv : me(usuario)
+Serv -> Repo : buscarPorId(id, perfil)
+Repo -> BD : SELECT ... WHERE id = :id
+Serv --> Ctrl : dados públicos (sem senha)
+Ctrl --> Tela : 200 usuario
+@enduml

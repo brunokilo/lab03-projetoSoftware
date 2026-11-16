@@ -1,0 +1,42 @@
+@startuml
+title UC13 · Receber moedas semestrais (professor)
+autonumber
+hide footbox
+skinparam responseMessageBelowArrow true
+
+actor "Relógio" as Rel <<sistema externo>>
+participant "Servidor\n(index.ts)" as Srv
+participant "ProfessorService" as Serv
+participant "ProfessorRepository" as Repo
+participant "Professor" as Prof
+participant "ContaMoedas" as Conta
+database "PostgreSQL" as BD
+actor Professor as P
+
+Rel -> Srv : servidor inicia e, depois, a cada 24 h (setInterval)
+Srv -> Serv : creditarSemestre()
+activate Serv
+Serv -> Serv : semestreAtual() -> "AAAA-1" (jan-jun) ou "AAAA-2" (jul-dez)
+Serv -> Repo : marcarCreditoSemSemestre(semestre)
+Repo -> BD : UPDATE professor SET ultimo_semestre_creditado = :semestre\nWHERE ultimo_semestre_creditado IS NULL
+Serv -> Repo : creditarPendentes(semestre)
+activate Repo
+Repo -> BD : BEGIN
+Repo -> BD : SELECT professor JOIN conta_moedas\nWHERE ultimo_semestre_creditado IS DISTINCT FROM :semestre\nFOR UPDATE
+BD --> Repo : professores pendentes
+loop cada professor pendente
+  Repo -> Prof : receberCreditoSemestral(semestre)
+  Prof -> Conta : creditar(1000)
+  Prof -> Prof : ultimoSemestreCreditado = semestre
+end
+Repo -> BD : UPDATE conta_moedas e professor
+Repo -> BD : COMMIT
+Repo --> Serv : professores creditados
+deactivate Repo
+Serv --> Srv : { semestre, professoresCreditados }
+deactivate Serv
+opt alguém foi creditado
+  Srv -> Srv : log "Crédito do semestre ... feito para N professor(es)"
+end
+P -> Srv : vê o novo saldo em "Enviar moedas" ou no extrato (UC08)
+@enduml

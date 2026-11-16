@@ -28,8 +28,11 @@ export class AlunoService {
   private instituicoes = new InstituicaoRepository();
   private contas = new ContaRepository();
 
-  async listar() {
-    return (await this.repository.listar()).map(semSenha);
+  // Para o professor escolher quem recebe moedas: sem CPF, RG, endereço ou saldo dos alunos
+  async listarParaEnvio() {
+    return (await this.repository.listar())
+      .map((a) => ({ id: a.id, nome: a.nome, curso: a.curso, instituicao: a.instituicao }))
+      .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
   }
 
   async buscar(id: string) {

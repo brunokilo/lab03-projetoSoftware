@@ -1,0 +1,44 @@
+@startuml
+title UC08 · Consultar extrato da conta (professor; o aluno segue o mesmo fluxo)
+autonumber
+hide footbox
+skinparam responseMessageBelowArrow true
+
+actor Professor as P
+boundary "Extrato.tsx" as Tela
+control "autenticar +\nexigirPerfil('professor', 'aluno')" as Mw
+control "MoedaController" as Ctrl
+participant "MoedaService" as Serv
+database "PostgreSQL" as BD
+
+P -> Tela : abre "Extrato"
+Tela -> Mw : GET /moedas/extrato (Authorization: Bearer token)
+activate Mw
+alt sem token ou perfil empresa
+  Mw --> Tela : 401 / 403
+else
+  Mw -> Ctrl : req.usuario = { id, perfil }
+  deactivate Mw
+  activate Ctrl
+  Ctrl -> Serv : extrato(req.usuario)
+  activate Serv
+  Serv -> Serv : saldo(usuario)
+  Serv -> BD : SELECT professor (com a conta) WHERE id = :id
+  BD --> Serv : professor.conta.saldo
+  alt perfil professor
+    Serv -> BD : SELECT transacao (tipo ENVIO) WHERE professor_id = :id, com o aluno
+    BD --> Serv : envios feitos
+    Serv -> Serv : cada envio vira movimentação de "saida", contraparte = aluno
+  else perfil aluno
+    Serv -> BD : SELECT transacao (tipo ENVIO) WHERE aluno_id = :id, com o professor
+    BD --> Serv : moedas recebidas
+    Serv -> Serv : cada envio vira movimentação de "entrada", contraparte = professor
+  end
+  Serv -> Serv : ordena da mais recente para a mais antiga
+  Serv --> Ctrl : { saldo, transacoes }
+  deactivate Serv
+  Ctrl --> Tela : 200 { saldo, transacoes }
+  deactivate Ctrl
+end
+Tela --> P : saldo atual e lista de movimentações (ou "nenhuma movimentação")
+@enduml
