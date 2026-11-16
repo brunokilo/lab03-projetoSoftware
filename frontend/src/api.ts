@@ -1,5 +1,10 @@
 const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
 
+// Fotos e outros arquivos salvos pela API vêm como caminho ("/uploads/..."): monta o endereço completo
+export function urlArquivo(caminho: string) {
+  return API_URL + caminho;
+}
+
 const CHAVE_TOKEN = "moeda.token";
 
 // Disparado quando a API recusa o token (expirado ou inválido), para o App voltar ao login

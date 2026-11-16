@@ -1,13 +1,13 @@
 import { useEffect, useId, useState, type FormEvent } from "react";
 import { api } from "../api";
-import type { Aluno, EnvioRealizado, TipoAviso } from "../types";
+import type { AlunoResumo, EnvioRealizado, TipoAviso } from "../types";
 import { compararNomes } from "../utils/formatos";
 import { Campo } from "../components/Campo";
 import EstadoVazio from "../components/EstadoVazio";
 import Icone from "../components/Icone";
 
 interface Props {
-  alunos: Aluno[];
+  alunos: AlunoResumo[];
   carregando: boolean;
   notificar: (tipo: TipoAviso, mensagem: string) => void;
 }

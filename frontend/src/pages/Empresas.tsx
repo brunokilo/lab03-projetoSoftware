@@ -1,11 +1,8 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { Empresa } from "../types";
 import { compararNomes, exibirCnpj, normalizar, somenteDigitos } from "../utils/formatos";
-import { substituirRota } from "../hooks/useRota";
 import Avatar from "../components/Avatar";
-import Confirmacao from "../components/Confirmacao";
 import EstadoVazio from "../components/EstadoVazio";
-import FormEmpresa from "../components/FormEmpresa";
 import Icone from "../components/Icone";
 import Paginacao from "../components/Paginacao";
 
@@ -13,24 +10,15 @@ interface Props {
   empresas: Empresa[];
   carregando: boolean;
   indisponivel: boolean;
-  abrirCadastro: boolean;
-  aoSalvar: (dados: object, id?: string) => Promise<void>;
-  aoRemover: (empresa: Empresa) => Promise<void>;
 }
 
 const POR_PAGINA = 8;
 
-export default function Empresas({ empresas, carregando, indisponivel, abrirCadastro, aoSalvar, aoRemover }: Props) {
+// Lista das parceiras para todos os perfis. Cada empresa se cadastra sozinha e só edita o próprio
+// cadastro (em "Meu cadastro"), então aqui não há cadastrar, editar ou excluir
+export default function Empresas({ empresas, carregando, indisponivel }: Props) {
   const [busca, setBusca] = useState("");
   const [pagina, setPagina] = useState(1);
-  const [formulario, setFormulario] = useState<{ empresa?: Empresa } | null>(null);
-  const [excluindo, setExcluindo] = useState<Empresa | null>(null);
-
-  useEffect(() => {
-    if (!abrirCadastro) return;
-    setFormulario({});
-    substituirRota("/empresas");
-  }, [abrirCadastro]);
 
   const termo = normalizar(busca.trim());
   const digitos = somenteDigitos(busca);
@@ -57,10 +45,6 @@ export default function Empresas({ empresas, carregando, indisponivel, abrirCada
             em troca de moedas estudantis.
           </p>
         </div>
-        <button type="button" className="botao botao-primario" onClick={() => setFormulario({})}>
-          <Icone nome="mais" />
-          Nova empresa
-        </button>
       </div>
 
       <section className="cartao">
@@ -113,13 +97,7 @@ export default function Empresas({ empresas, carregando, indisponivel, abrirCada
           <EstadoVazio
             icone="empresa"
             titulo="Nenhuma empresa parceira"
-            descricao="Cadastre empresas para que os alunos tenham vantagens disponíveis para trocar suas moedas."
-            acao={
-              <button type="button" className="botao botao-primario" onClick={() => setFormulario({})}>
-                <Icone nome="mais" />
-                Cadastrar empresa
-              </button>
-            }
+            descricao="Assim que uma empresa se cadastrar, ela aparece aqui com as vantagens que oferece."
           />
         ) : filtradas.length === 0 ? (
           <EstadoVazio
@@ -141,9 +119,6 @@ export default function Empresas({ empresas, carregando, indisponivel, abrirCada
                     <th>Empresa</th>
                     <th>CNPJ</th>
                     <th className="ocultar-celular">E-mail de contato</th>
-                    <th>
-                      <span className="sr-only">Ações</span>
-                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -161,26 +136,6 @@ export default function Empresas({ empresas, carregando, indisponivel, abrirCada
                           {e.email}
                         </a>
                       </td>
-                      <td className="acoes">
-                        <button
-                          type="button"
-                          className="botao-icone"
-                          onClick={() => setFormulario({ empresa: e })}
-                          title="Editar"
-                          aria-label={`Editar ${e.nome}`}
-                        >
-                          <Icone nome="editar" tamanho={16} />
-                        </button>
-                        <button
-                          type="button"
-                          className="botao-icone perigo"
-                          onClick={() => setExcluindo(e)}
-                          title="Excluir"
-                          aria-label={`Excluir ${e.nome}`}
-                        >
-                          <Icone nome="excluir" tamanho={16} />
-                        </button>
-                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -196,37 +151,6 @@ export default function Empresas({ empresas, carregando, indisponivel, abrirCada
           </>
         )}
       </section>
-
-      {formulario && (
-        <FormEmpresa
-          empresa={formulario.empresa}
-          aoFechar={() => setFormulario(null)}
-          aoSalvar={async (dados) => {
-            await aoSalvar(dados, formulario.empresa?.id);
-            setFormulario(null);
-          }}
-        />
-      )}
-
-      {excluindo && (
-        <Confirmacao
-          titulo="Excluir empresa parceira"
-          textoConfirmar="Excluir empresa"
-          aoFechar={() => setExcluindo(null)}
-          aoConfirmar={async () => {
-            await aoRemover(excluindo);
-            setExcluindo(null);
-          }}
-        >
-          <p>
-            Tem certeza que deseja excluir <strong>{excluindo.nome}</strong>?
-          </p>
-          <p className="texto-suave">
-            A empresa perderá o acesso ao sistema e as vantagens oferecidas por ela também serão removidas. Essa
-            ação não pode ser desfeita.
-          </p>
-        </Confirmacao>
-      )}
     </>
   );
 }

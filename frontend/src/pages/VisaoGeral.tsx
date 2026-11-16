@@ -1,12 +1,12 @@
-import type { Aluno, Empresa, Instituicao } from "../types";
-import { compararNomes, exibirCnpj, normalizar } from "../utils/formatos";
+import type { Empresa, Perfil, Resumo } from "../types";
+import { compararNomes, exibirCnpj } from "../utils/formatos";
 import Avatar from "../components/Avatar";
 import Icone, { type NomeIcone } from "../components/Icone";
 
 interface Props {
-  alunos: Aluno[];
+  resumo: Resumo | null;
   empresas: Empresa[];
-  instituicoes: Instituicao[];
+  perfil: Perfil;
   carregando: boolean;
   indisponivel: boolean;
 }
@@ -40,11 +40,16 @@ const ETAPAS = [
   },
 ];
 
-export default function VisaoGeral({ alunos, empresas, instituicoes, carregando, indisponivel }: Props) {
-  const cursos = new Set(alunos.map((a) => normalizar(a.curso.trim()))).size;
+// Atalho principal de cada perfil no topo da visão geral
+const ATALHOS: Record<Perfil, { href: string; texto: string; icone: NomeIcone }> = {
+  professor: { href: "#/enviar-moedas", texto: "Enviar moedas", icone: "enviar" },
+  aluno: { href: "#/vantagens", texto: "Ver vantagens", icone: "presente" },
+  empresa: { href: "#/minhas-vantagens/novo", texto: "Nova vantagem", icone: "mais" },
+};
 
-  const porInstituicao = instituicoes
-    .map((i) => ({ ...i, total: alunos.filter((a) => a.instituicao?.id === i.id).length }))
+export default function VisaoGeral({ resumo, empresas, perfil, carregando, indisponivel }: Props) {
+  const atalho = ATALHOS[perfil];
+  const porInstituicao = [...(resumo?.alunosPorInstituicao ?? [])]
     .sort((a, b) => b.total - a.total || a.nome.localeCompare(b.nome, "pt-BR"));
   const maior = Math.max(1, ...porInstituicao.map((i) => i.total));
 
@@ -56,10 +61,12 @@ export default function VisaoGeral({ alunos, empresas, instituicoes, carregando,
     link?: { href: string; texto: string };
     rodape?: string;
   }[] = [
-    { rotulo: "Alunos cadastrados", valor: alunos.length, icone: "aluno", tom: "azul", link: { href: "#/alunos", texto: "Ver alunos" } },
-    { rotulo: "Empresas parceiras", valor: empresas.length, icone: "empresa", tom: "dourado", link: { href: "#/empresas", texto: "Ver empresas" } },
-    { rotulo: "Instituições participantes", valor: instituicoes.length, icone: "instituicao", tom: "verde", rodape: "Pré-cadastradas pelo programa" },
-    { rotulo: "Cursos representados", valor: cursos, icone: "livro", tom: "roxo", rodape: "Entre os alunos cadastrados" },
+    { rotulo: "Alunos cadastrados", valor: resumo?.alunos ?? 0, icone: "aluno", tom: "azul", rodape: `De ${porInstituicao.length} instituições participantes` },
+    { rotulo: "Empresas parceiras", valor: resumo?.empresas ?? 0, icone: "empresa", tom: "dourado", link: { href: "#/empresas", texto: "Ver empresas" } },
+    perfil === "empresa"
+      ? { rotulo: "Vantagens disponíveis", valor: resumo?.vantagensAtivas ?? 0, icone: "presente", tom: "verde", link: { href: "#/minhas-vantagens", texto: "Minhas vantagens" } }
+      : { rotulo: "Vantagens disponíveis", valor: resumo?.vantagensAtivas ?? 0, icone: "presente", tom: "verde", link: { href: "#/vantagens", texto: "Ver vantagens" } },
+    { rotulo: "Cursos representados", valor: resumo?.cursos ?? 0, icone: "livro", tom: "roxo", rodape: "Entre os alunos cadastrados" },
   ];
 
   return (
@@ -70,13 +77,9 @@ export default function VisaoGeral({ alunos, empresas, instituicoes, carregando,
           <p>Acompanhe os números do programa de mérito estudantil.</p>
         </div>
         <div className="acoes-rapidas">
-          <a href="#/empresas/novo" className="botao botao-secundario">
-            <Icone nome="empresa" />
-            Nova empresa
-          </a>
-          <a href="#/alunos/novo" className="botao botao-primario">
-            <Icone nome="mais" />
-            Novo aluno
+          <a href={atalho.href} className="botao botao-primario">
+            <Icone nome={atalho.icone} />
+            {atalho.texto}
           </a>
         </div>
       </div>
@@ -193,7 +196,7 @@ export default function VisaoGeral({ alunos, empresas, instituicoes, carregando,
           ) : empresas.length === 0 ? (
             <div className="cartao-corpo">
               <p className="texto-suave">
-                Nenhuma empresa parceira ainda. <a className="link" href="#/empresas/novo">Cadastre a primeira</a>.
+                Nenhuma empresa parceira ainda.
               </p>
             </div>
           ) : (

@@ -25,6 +25,33 @@ export interface Aluno {
   endereco?: Endereco;
 }
 
+// O que o professor vê de cada aluno para escolher quem recebe moedas
+export interface AlunoResumo {
+  id: string;
+  nome: string;
+  curso: string;
+  instituicao: Instituicao;
+}
+
+// Números agregados da visão geral (GET /resumo)
+export interface Resumo {
+  alunos: number;
+  empresas: number;
+  vantagensAtivas: number;
+  cursos: number;
+  alunosPorInstituicao: { id: string; nome: string; total: number }[];
+}
+
+export interface Vantagem {
+  id: string;
+  nome: string;
+  descricao: string;
+  foto: string | null;
+  custoMoedas: number;
+  ativa: boolean;
+  empresa: { id: string; nome: string };
+}
+
 export interface Empresa {
   id: string;
   nome: string;

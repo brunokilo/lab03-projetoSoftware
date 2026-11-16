@@ -1,9 +1,10 @@
 import { useState, type FormEvent } from "react";
 import { api } from "../api";
-import type { Aluno, Instituicao, Usuario } from "../types";
+import type { Aluno, Empresa, Instituicao, Usuario } from "../types";
 import { emailValido } from "../utils/formatos";
 import { Campo, InputSenha } from "../components/Campo";
 import FormAluno from "../components/FormAluno";
+import FormEmpresa from "../components/FormEmpresa";
 import Icone from "../components/Icone";
 
 interface Props {
@@ -20,6 +21,7 @@ export default function Login({ aoEntrar }: Props) {
   // null = cadastro fechado; lista = cadastro aberto (as instituições são públicas)
   const [instituicoes, setInstituicoes] = useState<Instituicao[] | null>(null);
   const [abrindoCadastro, setAbrindoCadastro] = useState(false);
+  const [cadastroEmpresa, setCadastroEmpresa] = useState(false);
 
   async function entrar(e: FormEvent) {
     e.preventDefault();
@@ -132,6 +134,18 @@ export default function Login({ aoEntrar }: Props) {
           Ainda não tem conta?{" "}
           <button type="button" className="link-botao" onClick={abrirCadastro} disabled={abrindoCadastro}>
             Criar conta de aluno
+          </button>{" "}
+          ou{" "}
+          <button
+            type="button"
+            className="link-botao"
+            onClick={() => {
+              setErroServidor("");
+              setSucesso("");
+              setCadastroEmpresa(true);
+            }}
+          >
+            de empresa parceira
           </button>
         </p>
       </section>
@@ -146,6 +160,19 @@ export default function Login({ aoEntrar }: Props) {
             setSenha("");
             setSucesso("Cadastro realizado! Digite sua senha para entrar.");
             setInstituicoes(null);
+          }}
+        />
+      )}
+
+      {cadastroEmpresa && (
+        <FormEmpresa
+          aoFechar={() => setCadastroEmpresa(false)}
+          aoSalvar={async (dados) => {
+            const criada = await api<Empresa>("/empresas", { method: "POST", body: JSON.stringify(dados) });
+            setEmail(criada.email);
+            setSenha("");
+            setSucesso("Empresa cadastrada! Digite a senha para entrar e cadastrar suas vantagens.");
+            setCadastroEmpresa(false);
           }}
         />
       )}
