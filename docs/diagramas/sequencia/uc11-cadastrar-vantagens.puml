@@ -1,0 +1,64 @@
+@startuml
+title UC11 · Cadastrar vantagens (empresa parceira)
+autonumber
+hide footbox
+skinparam responseMessageBelowArrow true
+
+actor Empresa as E
+boundary "MinhasVantagens.tsx +\nFormVantagem.tsx" as Tela
+control "autenticar +\nexigirPerfil('empresa')" as Mw
+control "VantagemController" as Ctrl
+participant "VantagemService" as Serv
+participant "FotoService" as Foto
+participant "VantagemRepository" as Repo
+database "PostgreSQL" as BD
+collections "backend/uploads" as Disco
+
+E -> Tela : "Nova vantagem"
+E -> Tela : escolhe a foto do produto
+Tela -> Tela : confere tipo (PNG, JPEG, WebP) e tamanho (até 2 MB)\ne lê como data URL para a prévia
+E -> Tela : nome, descrição e custo em moedas
+Tela -> Tela : valida campos obrigatórios e custo inteiro > 0
+Tela -> Mw : POST /vantagens { nome, descricao, custoMoedas, foto }\nAuthorization: Bearer token
+activate Mw
+alt corpo acima de 3 MB
+  Mw --> Tela : 413 "A foto deve ter no máximo 2 MB"
+else sem token ou perfil diferente de empresa
+  Mw --> Tela : 401 / 403
+else
+  Mw -> Ctrl : req.usuario = { id, perfil: empresa }
+  deactivate Mw
+  activate Ctrl
+  Ctrl -> Serv : criar(req.usuario.id, corpo)
+  activate Serv
+  Serv -> BD : SELECT empresa WHERE id = :id
+  alt sem foto, nome, descrição ou custo inválido
+    Serv --> Ctrl : AppError 400
+  else
+    Serv -> Foto : salvar(dataUrl, "vantagens")
+    activate Foto
+    alt formato não aceito, mais de 2 MB ou bytes que não são imagem
+      Foto --> Serv : AppError 400
+    else
+      Foto -> Disco : grava vantagens/<uuid>.png|jpg|webp
+      Foto --> Serv : "/uploads/vantagens/<uuid>.png"
+    end
+    deactivate Foto
+    Serv -> Repo : salvar(vantagem { ..., ativa: true, empresa })
+    Repo -> BD : INSERT vantagem
+    alt falha ao gravar no banco
+      Serv -> Foto : remover(caminho da foto)
+      Foto -> Disco : apaga o arquivo
+      Serv --> Ctrl : erro
+    else
+      Serv --> Ctrl : vantagem { id, nome, descricao, foto, custoMoedas, ativa, empresa }
+    end
+  end
+  deactivate Serv
+  Ctrl --> Tela : 201 vantagem ou { erro }
+  deactivate Ctrl
+end
+Tela -> Mw : GET /uploads/vantagens/<uuid>.png
+Mw --> Tela : imagem
+Tela --> E : cartão da vantagem "Ativa", já visível no catálogo dos alunos
+@enduml

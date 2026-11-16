@@ -165,6 +165,21 @@ Os diagramas ficam em [`docs/diagramas`](./docs/diagramas). Os arquivos-fonte `.
 | **Diagrama Entidade-Relacionamento** | **Diagrama de Componentes** |
 | <img src="docs/diagramas/der.png" alt="Diagrama Entidade-Relacionamento" width="400px"> | <img src="docs/diagramas/diagrama%20de%20componentes.png" alt="Diagrama de Componentes" width="400px"> |
 
+#### Diagramas de sequência
+
+Um diagrama para cada caso de uso de professor, empresa, instituição e dos sistemas externos, feito a partir do código atual. Ficam em [`docs/diagramas/sequencia`](./docs/diagramas/sequencia).
+
+| Caso de uso | Ator | Diagrama |
+| :--- | :--- | :--- |
+| UC01 · Gerenciar login | Usuário (aluno, professor ou empresa) | [uc01-gerenciar-login.png](docs/diagramas/sequencia/uc01-gerenciar-login.png) |
+| UC04 · Enviar moedas | Professor | [uc04-enviar-moedas.png](docs/diagramas/sequencia/uc04-enviar-moedas.png) |
+| UC05 · Notificar aluno | Sistema de e-mail (incluído pelo envio) | [uc05-notificar-aluno.png](docs/diagramas/sequencia/uc05-notificar-aluno.png) |
+| UC08 · Consultar extrato da conta | Professor (o aluno segue o mesmo fluxo) | [uc08-consultar-extrato.png](docs/diagramas/sequencia/uc08-consultar-extrato.png) |
+| UC09 · Informar lista de professores | Instituição | [uc09-informar-lista-de-professores.png](docs/diagramas/sequencia/uc09-informar-lista-de-professores.png) |
+| UC10 · Cadastrar conta | Empresa | [uc10-cadastrar-conta-empresa.png](docs/diagramas/sequencia/uc10-cadastrar-conta-empresa.png) |
+| UC11 · Cadastrar vantagens | Empresa | [uc11-cadastrar-vantagens.png](docs/diagramas/sequencia/uc11-cadastrar-vantagens.png) |
+| UC13 · Receber moedas semestrais | Professor e Relógio | [uc13-receber-moedas-semestrais.png](docs/diagramas/sequencia/uc13-receber-moedas-semestrais.png) |
+
 ---
 
 ## 🔐 Permissões por perfil

@@ -1,0 +1,61 @@
+@startuml
+title UC04 · Enviar moedas (professor)
+autonumber
+hide footbox
+skinparam responseMessageBelowArrow true
+
+actor Professor as P
+boundary "EnviarMoedas.tsx" as Tela
+control "autenticar +\nexigirPerfil('professor')" as Mw
+control "MoedaController" as Ctrl
+participant "MoedaService" as Serv
+participant "ContaMoedas" as Conta
+database "PostgreSQL" as BD
+
+P -> Tela : abre "Enviar moedas"
+Tela -> Mw : GET /moedas/saldo e GET /alunos
+Mw --> Tela : saldo do professor e alunos (id, nome, curso, instituição)
+P -> Tela : escolhe aluno, quantidade e motivo
+Tela -> Tela : valida aluno, inteiro > 0, saldo suficiente e motivo
+Tela -> Mw : POST /moedas/enviar { alunoId, valor, motivo }\nAuthorization: Bearer token
+activate Mw
+alt sem token, token inválido ou perfil diferente de professor
+  Mw --> Tela : 401 / 403
+else
+  Mw -> Ctrl : req.usuario = { id, perfil }
+  deactivate Mw
+  activate Ctrl
+  Ctrl -> Serv : enviar(req.usuario.id, corpo)
+  activate Serv
+  alt alunoId ausente, valor não inteiro positivo ou motivo vazio / > 500
+    Serv --> Ctrl : AppError 400
+  else
+    Serv -> BD : BEGIN
+    Serv -> BD : SELECT professor e SELECT aluno
+    alt professor ou aluno não encontrado
+      Serv -> BD : ROLLBACK
+      Serv --> Ctrl : AppError 404
+    else
+      Serv -> BD : SELECT conta do professor FOR UPDATE
+      Serv -> BD : SELECT conta do aluno FOR UPDATE
+      Serv -> Conta : contaProfessor.debitar(valor)
+      alt saldo insuficiente
+        Conta --> Serv : AppError
+        Serv -> BD : ROLLBACK
+        Serv --> Ctrl : AppError 400 "Saldo insuficiente..."
+      else
+        Serv -> Conta : contaAluno.creditar(valor)
+        Serv -> BD : UPDATE conta_moedas (as duas contas)
+        Serv -> BD : INSERT transacao (tipo ENVIO, valor, motivo, professor, aluno)
+        Serv -> BD : COMMIT
+        ref over Serv : UC05 · Notificar aluno\n(em segundo plano, sem esperar o e-mail)
+        Serv --> Ctrl : { id, dataHora, valor, motivo, aluno, saldoProfessor, saldoAluno }
+      end
+    end
+  end
+  deactivate Serv
+  Ctrl --> Tela : 201 envio ou { erro }
+  deactivate Ctrl
+end
+Tela --> P : aviso "N moedas enviadas para <aluno>" e novo saldo
+@enduml

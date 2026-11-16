@@ -1,0 +1,46 @@
+@startuml
+title UC10 · Cadastrar conta (empresa parceira)
+autonumber
+hide footbox
+skinparam responseMessageBelowArrow true
+
+actor Empresa as E
+boundary "Login.tsx +\nFormEmpresa.tsx" as Tela
+control "EmpresaController" as Ctrl
+participant "EmpresaService" as Serv
+participant "ContaRepository" as Contas
+participant "EmpresaRepository" as Repo
+database "PostgreSQL" as BD
+
+E -> Tela : "Criar conta de empresa parceira"
+E -> Tela : nome, CNPJ, e-mail, senha e confirmação
+Tela -> Tela : valida campos, dígitos do CNPJ, e-mail\ne senha (6+ caracteres, confirmação igual)
+Tela -> Ctrl : POST /empresas { nome, cnpj, email, senha }
+activate Ctrl
+Ctrl -> Serv : criar(dados)
+activate Serv
+alt campo obrigatório ausente
+  Serv --> Ctrl : AppError 400
+else
+  Serv -> Contas : emailEmUsoEmOutroPerfil(email, "empresa")
+  Contas -> BD : SELECT aluno / professor WHERE LOWER(email) = :email
+  alt e-mail já usado por aluno ou professor
+    Serv --> Ctrl : AppError 409
+  else
+    Serv -> Serv : bcrypt.hash(senha)
+    Serv -> Repo : salvar(empresa)
+    Repo -> BD : INSERT empresa
+    alt e-mail ou CNPJ já cadastrado em outra empresa (índice único)
+      BD --> Serv : erro 23505
+      Serv --> Ctrl : 409 "Já existe um cadastro com esse email, CPF ou CNPJ"
+    else
+      BD --> Serv : empresa criada
+      Serv --> Ctrl : empresa sem a senha
+    end
+  end
+end
+deactivate Serv
+Ctrl --> Tela : 201 empresa ou { erro }
+deactivate Ctrl
+Tela --> E : "Empresa cadastrada! Digite a senha para entrar"\n(e-mail já preenchido no login)
+@enduml
