@@ -3,6 +3,8 @@ import { EmpresaRepository } from "../repositories/EmpresaRepository";
 import { ContaRepository } from "../repositories/ContaRepository";
 import { Empresa } from "../entities/Empresa";
 import { AppError } from "../errors/AppError";
+import { FotoService } from "./FotoService";
+import { VantagemRepository } from "../repositories/VantagemRepository";
 
 export interface EmpresaDados {
   nome?: string;
@@ -19,6 +21,8 @@ function semSenha(empresa: Empresa) {
 export class EmpresaService {
   private repository = new EmpresaRepository();
   private contas = new ContaRepository();
+  private vantagens = new VantagemRepository();
+  private fotos = new FotoService();
 
   async listar() {
     return (await this.repository.listar()).map(semSenha);
@@ -59,9 +63,12 @@ export class EmpresaService {
     return semSenha(await this.repository.salvar(empresa));
   }
 
+  // As vantagens saem junto com a empresa (ON DELETE CASCADE); as fotos delas são apagadas depois
   async remover(id: string) {
     await this.obter(id);
+    const vantagens = await this.vantagens.listarDaEmpresa(id);
     await this.repository.remover(id);
+    await Promise.all(vantagens.map((v) => this.fotos.remover(v.foto)));
   }
 
   // O login identifica a pessoa só pelo e-mail, então ele não pode existir em aluno ou professor

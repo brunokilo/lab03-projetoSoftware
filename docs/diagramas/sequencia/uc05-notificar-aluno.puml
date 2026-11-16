@@ -1,0 +1,40 @@
+@startuml
+title UC05 · Notificar aluno (incluído pelo envio de moedas)
+autonumber
+hide footbox
+skinparam responseMessageBelowArrow true
+
+participant "MoedaService" as Moeda
+participant "EmailService" as Email
+participant "templates/email" as Tpl
+actor "Sistema de e-mail\n(SMTP ou Ethereal)" as SMTP <<sistema externo>>
+
+Moeda ->> Email : notificarEnvioMoedas({ professor, aluno, valor, motivo, saldos })
+activate Email
+Email -> Tpl : confirmacaoEnvioProfessor(...)
+Tpl --> Email : { assunto, html, texto }
+Email -> Tpl : recebimentoAluno(...)
+Tpl --> Email : { assunto, html, texto }
+
+opt primeira mensagem desde que o servidor subiu
+  alt SMTP_HOST definido no .env
+    Email -> Email : nodemailer.createTransport(SMTP do .env)
+  else sem SMTP configurado
+    Email -> SMTP : createTestAccount()
+    SMTP --> Email : conta de teste do Ethereal
+  end
+end
+
+par e-mail do aluno
+  Email -> SMTP : sendMail(para: aluno, "Você recebeu moedas")
+  SMTP --> Email : info (no Ethereal, link de pré-visualização no log)
+else e-mail do professor
+  Email -> SMTP : sendMail(para: professor, confirmação do envio)
+  SMTP --> Email : info
+end
+
+opt algum envio falhou
+  Email -> Email : console.error("Falha ao enviar e-mail") — o outro e-mail segue normalmente
+end
+deactivate Email
+@enduml

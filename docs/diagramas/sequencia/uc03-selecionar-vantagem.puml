@@ -1,0 +1,22 @@
+@startuml sequencia_selecionar_vantagem
+title UC03 — Selecionar vantagem
+
+participant Frontend
+participant VantagemController
+participant VantagemService
+participant "Banco de dados" as BD
+
+Frontend -> VantagemController : 
+VantagemController -> VantagemService : listarAtivas()
+VantagemService -> BD : buscar vantagens ativas
+BD --> VantagemService : lista de vantagens
+VantagemService --> VantagemController : lista de vantagens
+VantagemController --> Frontend : 200 OK (lista)
+
+Frontend -> VantagemController : 
+VantagemController -> VantagemService : buscar(id)
+VantagemService -> BD : buscar vantagem pelo id
+BD --> VantagemService : vantagem
+VantagemService --> VantagemController : vantagem (descrição, foto, custo em moedas)
+VantagemController --> Frontend : 
+@enduml

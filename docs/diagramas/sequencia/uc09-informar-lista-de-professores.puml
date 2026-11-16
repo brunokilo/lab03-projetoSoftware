@@ -1,0 +1,40 @@
+@startuml
+title UC09 · Informar lista de professores (instituição)
+autonumber
+hide footbox
+skinparam responseMessageBelowArrow true
+
+actor "Instituição" as Inst
+participant "Servidor\n(index.ts)" as Srv
+participant "ProfessorService" as Serv
+participant "InstituicaoRepository" as RepoInst
+participant "ProfessorRepository" as Repo
+participant "ContaMoedas" as Conta
+database "PostgreSQL" as BD
+
+Inst -> Serv : envia a lista de professores (nome, e-mail, CPF, departamento)\nao firmar a parceria
+
+== Na inicialização do servidor ==
+Srv -> Serv : popularInicial()
+activate Serv
+Serv -> Repo : contar()
+Repo -> BD : SELECT COUNT(*) FROM professor
+BD --> Serv : total
+alt já existem professores
+  Serv --> Srv : nada a fazer (a carga só roda uma vez)
+else banco sem professores
+  Serv -> Serv : bcrypt.hash(senha padrão)
+  Serv -> RepoInst : listar()
+  RepoInst -> BD : SELECT instituicao_ensino
+  BD --> Serv : instituições participantes
+  loop cada instituição e cada professor da lista dela
+    Serv -> Conta : new ContaMoedas()
+    Serv -> Conta : creditar(1000)
+    Serv -> Serv : professor { dados, senha, conta, instituição,\nultimoSemestreCreditado = semestre atual }
+  end
+  Serv -> Repo : salvarVarios(professores)
+  Repo -> BD : INSERT conta_moedas e INSERT professor
+  Serv --> Srv : log "Professores iniciais cadastrados"
+end
+deactivate Serv
+@enduml

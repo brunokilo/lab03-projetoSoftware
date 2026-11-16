@@ -31,6 +31,17 @@ export function autenticar(req: Request, _res: Response, next: NextFunction) {
   next();
 }
 
+// Libera a rota só para o dono do cadastro do :id (ex.: um aluno editando os próprios dados).
+// Usar depois do "autenticar"
+export function exigirProprioCadastro(perfil: Perfil) {
+  return (req: Request, _res: Response, next: NextFunction) => {
+    if (req.usuario?.perfil !== perfil || req.usuario.id !== req.params.id) {
+      throw new AppError("Você só pode acessar o próprio cadastro", 403);
+    }
+    next();
+  };
+}
+
 // Limita a rota a certos perfis. Usar depois do "autenticar"
 export function exigirPerfil(...perfis: Perfil[]) {
   return (req: Request, _res: Response, next: NextFunction) => {

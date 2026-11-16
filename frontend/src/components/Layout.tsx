@@ -12,24 +12,36 @@ const rotuloPerfil: Record<Perfil, string> = {
 
 type GrupoMenu = { secao: string; itens: { pagina: Pagina; rotulo: string; icone: NomeIcone }[] };
 
-// O grupo "Moedas" muda conforme o perfil de quem está logado
-function menuDo(perfil: Perfil): GrupoMenu[] {
-  const moedas = [
-    { pagina: "enviar-moedas" as const, rotulo: "Enviar moedas", icone: "enviar" as const },
-    { pagina: "extrato" as const, rotulo: "Extrato", icone: "livro" as const },
-  ].filter((item) => podeAcessar(item.pagina, perfil));
+const MENU: GrupoMenu[] = [
+  {
+    secao: "Geral",
+    itens: [
+      { pagina: "visao-geral", rotulo: "Visão geral", icone: "painel" },
+      { pagina: "empresas", rotulo: "Empresas parceiras", icone: "empresa" },
+    ],
+  },
+  {
+    secao: "Moedas",
+    itens: [
+      { pagina: "enviar-moedas", rotulo: "Enviar moedas", icone: "enviar" },
+      { pagina: "extrato", rotulo: "Extrato", icone: "livro" },
+    ],
+  },
+  {
+    secao: "Vantagens",
+    itens: [
+      { pagina: "vantagens", rotulo: "Vantagens", icone: "presente" },
+      { pagina: "minhas-vantagens", rotulo: "Minhas vantagens", icone: "presente" },
+    ],
+  },
+  { secao: "Conta", itens: [{ pagina: "meu-cadastro", rotulo: "Meu cadastro", icone: "editar" }] },
+];
 
-  return [
-    { secao: "Geral", itens: [{ pagina: "visao-geral", rotulo: "Visão geral", icone: "painel" }] },
-    ...(moedas.length > 0 ? [{ secao: "Moedas", itens: moedas }] : []),
-    {
-      secao: "Cadastros",
-      itens: [
-        { pagina: "alunos", rotulo: "Alunos", icone: "aluno" },
-        { pagina: "empresas", rotulo: "Empresas parceiras", icone: "empresa" },
-      ],
-    },
-  ];
+// Cada perfil vê só os itens que pode usar; grupos que ficam vazios somem
+function menuDo(perfil: Perfil): GrupoMenu[] {
+  return MENU.map((grupo) => ({ ...grupo, itens: grupo.itens.filter((i) => podeAcessar(i.pagina, perfil)) })).filter(
+    (grupo) => grupo.itens.length > 0,
+  );
 }
 
 interface Props {
