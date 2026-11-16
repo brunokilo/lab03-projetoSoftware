@@ -6,7 +6,7 @@ participant VantagemController
 participant VantagemService
 participant "Banco de dados" as BD
 
-Frontend -> VantagemController : GET /vantagens
+Frontend -> VantagemController : 
 VantagemController -> VantagemService : listarAtivas()
 VantagemService -> BD : buscar vantagens ativas
 BD --> VantagemService : lista de vantagens
@@ -18,5 +18,5 @@ VantagemController -> VantagemService : buscar(id)
 VantagemService -> BD : buscar vantagem pelo id
 BD --> VantagemService : vantagem
 VantagemService --> VantagemController : vantagem (descrição, foto, custo em moedas)
-VantagemController --> Frontend : 200 OK
+VantagemController --> Frontend : 
 @enduml

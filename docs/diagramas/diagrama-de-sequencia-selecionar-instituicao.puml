@@ -9,7 +9,7 @@ participant AlunoController
 participant AlunoService
 participant "Aluno" as AlunoClasse
 
-Frontend -> InstituicaoController : GET /instituicoes
+Frontend -> InstituicaoController : 
 InstituicaoController -> InstituicaoService : listar()
 InstituicaoService -> BD : buscar instituições
 BD --> InstituicaoService : lista de instituições
@@ -25,5 +25,5 @@ AlunoService -> AlunoClasse : instituicao = instituição selecionada
 AlunoService -> BD : salvar aluno
 BD --> AlunoService : ok
 AlunoService --> AlunoController : aluno
-AlunoController --> Frontend : 201 Created
+AlunoController --> Frontend : 
 @enduml

@@ -9,7 +9,7 @@ participant "Aluno" as AlunoClasse
 participant "Banco de dados" as BD
 participant EmailService
 
-Frontend -> MoedaController : POST /moedas/enviar (alunoId, valor, motivo)
+Frontend -> MoedaController : 
 MoedaController -> MoedaService : enviar(professorId, dados)
 MoedaService -> MoedaService : validar dados
 MoedaService -> BD : buscar professor e aluno
@@ -22,5 +22,5 @@ MoedaService -> BD : salvar contas e registrar transação
 BD --> MoedaService : ok
 MoedaService -> EmailService : notificarEnvioMoedas()
 MoedaService --> MoedaController : resposta
-MoedaController --> Frontend : 201 Created
+MoedaController --> Frontend : 
 @enduml
