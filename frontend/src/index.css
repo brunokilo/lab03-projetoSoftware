@@ -1734,3 +1734,33 @@ td.motivo {
     max-width: none;
   }
 }
+
+/* ===== Troca de vantagens: código do cupom ===== */
+.codigo-cupom {
+  margin: 16px 0;
+  padding: 14px 18px;
+  border: 1px dashed var(--primaria);
+  border-radius: 8px;
+  background: var(--primaria-suave);
+  color: var(--primaria-escura);
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-align: center;
+  user-select: all;
+}
+
+.codigo-cupom-pequeno {
+  display: inline-block;
+  margin-left: 4px;
+  padding: 1px 8px;
+  border-radius: 6px;
+  background: var(--primaria-suave);
+  color: var(--primaria-escura);
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  white-space: nowrap;
+}

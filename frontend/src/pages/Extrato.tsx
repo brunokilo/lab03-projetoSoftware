@@ -25,7 +25,7 @@ export default function Extrato({ perfil }: { perfil: Perfil }) {
           <p>
             {professor
               ? "Seu saldo atual e as moedas que você já enviou aos alunos."
-              : "Seu saldo atual e as moedas que você recebeu dos professores."}
+              : "Seu saldo atual, as moedas que você recebeu dos professores e as trocas por vantagens."}
           </p>
         </div>
       </div>
@@ -77,7 +77,7 @@ export default function Extrato({ perfil }: { perfil: Perfil }) {
               <thead>
                 <tr>
                   <th>Data</th>
-                  <th>{professor ? "Aluno" : "Professor"}</th>
+                  <th>{professor ? "Aluno" : "Professor / Empresa"}</th>
                   <th>Motivo</th>
                   <th className="direita">Moedas</th>
                 </tr>
@@ -87,7 +87,15 @@ export default function Extrato({ perfil }: { perfil: Perfil }) {
                   <tr key={t.id}>
                     <td className="numero">{exibirDataHora(t.dataHora)}</td>
                     <td>{t.contraparte.nome}</td>
-                    <td className="motivo">{t.motivo}</td>
+                    <td className="motivo">
+                      {t.motivo}
+                      {t.codigo && (
+                        <>
+                          {" "}
+                          <span className="codigo-cupom-pequeno">Código {t.codigo}</span>
+                        </>
+                      )}
+                    </td>
                     <td className={`numero direita valor-${t.sentido}`}>
                       {t.sentido === "entrada" ? "+" : "−"}
                       {t.valor.toLocaleString("pt-BR")}
