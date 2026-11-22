@@ -151,7 +151,7 @@ function Painel({
         <EnviarMoedas alunos={alunos} carregando={carregando} notificar={notificar} />
       )}
       {pagina === "extrato" && <Extrato perfil={usuario.perfil} />}
-      {pagina === "vantagens" && <Vantagens perfil={usuario.perfil} />}
+      {pagina === "vantagens" && <Vantagens perfil={usuario.perfil} notificar={notificar} />}
       {pagina === "minhas-vantagens" && <MinhasVantagens abrirCadastro={novo} notificar={notificar} />}
       {pagina === "meu-cadastro" && (
         <MeuCadastro

@@ -69,15 +69,26 @@ export interface Usuario {
   perfil: Perfil;
 }
 
-// Uma linha do extrato. Hoje só existe o envio de moedas; os resgates de vantagens entram depois
+// Uma linha do extrato: envio de moedas por um professor ou troca por uma vantagem (com o código do cupom)
 export interface Movimentacao {
   id: string;
-  tipo: "ENVIO";
+  tipo: "ENVIO" | "RESGATE";
   sentido: "entrada" | "saida";
   dataHora: string;
   valor: number;
   motivo: string;
   contraparte: { id: string; nome: string };
+  codigo: string | null;
+}
+
+// Resposta de POST /resgates
+export interface ResgateRealizado {
+  id: string;
+  codigo: string;
+  valor: number;
+  vantagem: { id: string; nome: string };
+  empresa: { id: string; nome: string };
+  saldoAluno: number;
 }
 
 export interface Extrato {
