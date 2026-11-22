@@ -4,6 +4,7 @@ import { ContaMoedas } from "../entities/ContaMoedas";
 import { Professor } from "../entities/Professor";
 import { TransacaoEnvio } from "../entities/TransacaoEnvio";
 import { AppError } from "../errors/AppError";
+import { ResgateRepository } from "../repositories/ResgateRepository";
 import { UsuarioLogado } from "./AuthService";
 import { EmailService } from "./EmailService";
 
@@ -15,8 +16,21 @@ export interface EnvioDados {
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+// Uma linha do extrato. "codigo" só existe nos resgates (cupom da troca)
+interface Movimentacao {
+  id: string;
+  tipo: "ENVIO" | "RESGATE";
+  sentido: "entrada" | "saida";
+  dataHora: Date;
+  valor: number;
+  motivo: string;
+  contraparte: { id: string; nome: string };
+  codigo: string | null;
+}
+
 export class MoedaService {
   private emails = new EmailService();
+  private resgates = new ResgateRepository();
 
   // Professor envia moedas a um aluno. Debitar, creditar e registrar a transação acontecem juntos:
   // se qualquer passo falhar, nada é gravado
@@ -93,8 +107,8 @@ export class MoedaService {
   }
 
   // Extrato de quem está logado: saldo atual e as movimentações, da mais recente para a mais antiga.
-  // Professor: os envios que fez (saída). Aluno: as moedas que recebeu (entrada).
-  // As trocas por vantagens (Resgate, S03) entram aqui como outro tipo de movimentação do aluno.
+  // Professor: os envios que fez (saída). Aluno: as moedas que recebeu (entrada) e as trocas por
+  // vantagens (saída, com o código do cupom).
   async extrato(logado: UsuarioLogado) {
     const { saldo } = await this.saldo(logado);
     const envios = AppDataSource.getRepository(TransacaoEnvio);
@@ -104,20 +118,37 @@ export class MoedaService {
       ? await envios.find({ where: { professor: { id: logado.id } }, relations: { aluno: true } })
       : await envios.find({ where: { aluno: { id: logado.id } }, relations: { professor: true } });
 
-    const transacoes = lista
-      .map((envio) => {
-        const outro = professor ? envio.aluno : envio.professor;
-        return {
-          id: envio.id,
-          tipo: "ENVIO" as const,
-          sentido: professor ? ("saida" as const) : ("entrada" as const),
-          dataHora: envio.dataHora,
-          valor: envio.valor,
-          motivo: envio.motivo,
-          contraparte: { id: outro.id, nome: outro.nome },
-        };
-      })
-      .sort((a, b) => b.dataHora.getTime() - a.dataHora.getTime());
+    const movimentacoes: Movimentacao[] = lista.map((envio) => {
+      const outro = professor ? envio.aluno : envio.professor;
+      return {
+        id: envio.id,
+        tipo: "ENVIO",
+        sentido: professor ? "saida" : "entrada",
+        dataHora: envio.dataHora,
+        valor: envio.valor,
+        motivo: envio.motivo,
+        contraparte: { id: outro.id, nome: outro.nome },
+        codigo: null,
+      };
+    });
+
+    if (!professor) {
+      const resgates = await this.resgates.listarDoAluno(logado.id);
+      for (const resgate of resgates) {
+        movimentacoes.push({
+          id: resgate.id,
+          tipo: "RESGATE",
+          sentido: "saida",
+          dataHora: resgate.dataHora,
+          valor: resgate.valor,
+          motivo: `Troca: ${resgate.vantagemNome}`,
+          contraparte: { id: resgate.empresa?.id ?? "", nome: resgate.empresaNome },
+          codigo: resgate.codigo,
+        });
+      }
+    }
+
+    const transacoes = movimentacoes.sort((a, b) => b.dataHora.getTime() - a.dataHora.getTime());
 
     return { saldo, transacoes };
   }
