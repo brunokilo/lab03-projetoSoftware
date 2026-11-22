@@ -4,20 +4,56 @@ title UC06 — Trocar moedas
 participant Frontend
 participant ResgateController
 participant ResgateService
+participant AlunoRepository
+participant VantagemRepository
+participant ResgateRepository
 participant "Aluno" as AlunoClasse
 participant "Banco de dados" as BD
 participant EmailService
 
-Frontend -> ResgateController : 
-ResgateController -> ResgateService : resgatar(alunoId, vantagemId)
-ResgateService -> BD : buscar aluno e vantagem
-BD --> ResgateService : aluno, vantagem
-ResgateService -> ResgateService : validar vantagem ativa e saldo
-ResgateService -> AlunoClasse : conta.debitar(custoMoedas)
-AlunoClasse --> ResgateService : saldo atualizado
-ResgateService -> BD : salvar conta e registrar resgate (código do cupom)
-BD --> ResgateService : ok
-ResgateService -> EmailService : notificarResgate()
-ResgateService --> ResgateController : resgate (código do cupom)
-ResgateController --> Frontend : 
+Frontend -> ResgateController : POST /resgates { vantagemId }
+alt token ausente, expirado ou inválido
+  ResgateController --> Frontend : 401 { erro }
+else perfil sem permissão (não é aluno)
+  ResgateController --> Frontend : 403 { erro }
+else autorizado
+  ResgateController -> ResgateService : resgatar(alunoId, vantagemId)
+
+  ResgateService -> AlunoRepository : buscarPorId(alunoId)
+  AlunoRepository -> BD : buscar aluno
+  BD --> AlunoRepository : aluno ou nulo
+  AlunoRepository --> ResgateService : aluno ou nulo
+  alt aluno não encontrado
+    ResgateService --> ResgateController : AppError 404 "Aluno não encontrado"
+    ResgateController --> Frontend : 404 { erro }
+  else aluno encontrado
+    ResgateService -> VantagemRepository : buscarPorId(vantagemId)
+    VantagemRepository -> BD : buscar vantagem
+    BD --> VantagemRepository : vantagem ou nulo
+    VantagemRepository --> ResgateService : vantagem ou nulo
+    alt vantagem não encontrada
+      ResgateService --> ResgateController : AppError 404 "Vantagem não encontrada"
+      ResgateController --> Frontend : 404 { erro }
+    else vantagem encontrada
+      ResgateService -> ResgateService : validar vantagem ativa e saldo
+      alt vantagem inativa
+        ResgateService --> ResgateController : AppError 400 "Vantagem indisponível"
+        ResgateController --> Frontend : 400 { erro }
+      else saldo insuficiente
+        ResgateService --> ResgateController : AppError 400 "Saldo insuficiente para trocar essa vantagem"
+        ResgateController --> Frontend : 400 { erro }
+      else vantagem ativa e saldo suficiente
+        ResgateService -> AlunoClasse : conta.debitar(custoMoedas)
+        AlunoClasse --> ResgateService : saldo atualizado
+        ResgateService -> ResgateRepository : salvar(conta, resgate)
+        ResgateRepository -> BD : salvar conta e registrar resgate (código do cupom)
+        BD --> ResgateRepository : ok
+        ResgateRepository --> ResgateService : resgate (código do cupom)
+        ResgateService -> EmailService : notificarResgate()
+        ResgateService --> ResgateController : resgate (código do cupom)
+        ResgateController --> Frontend : 201 Created (resgate)
+      end
+    end
+  end
+end
 @enduml

@@ -4,26 +4,51 @@ title UC02 — Selecionar instituição
 participant Frontend
 participant InstituicaoController
 participant InstituicaoService
-participant "Banco de dados" as BD
+participant InstituicaoRepository
 participant AlunoController
 participant AlunoService
+participant AlunoRepository
 participant "Aluno" as AlunoClasse
+participant "Banco de dados" as BD
 
-Frontend -> InstituicaoController : 
+Frontend -> InstituicaoController : GET /instituicoes
 InstituicaoController -> InstituicaoService : listar()
-InstituicaoService -> BD : buscar instituições
-BD --> InstituicaoService : lista de instituições
+InstituicaoService -> InstituicaoRepository : listar()
+InstituicaoRepository -> BD : buscar instituições
+BD --> InstituicaoRepository : lista de instituições
+InstituicaoRepository --> InstituicaoService : lista de instituições
 InstituicaoService --> InstituicaoController : lista de instituições
-InstituicaoController --> Frontend : 
+InstituicaoController --> Frontend : 200 OK (lista)
 
-Frontend -> AlunoController : 
+Frontend -> AlunoController : POST /alunos
 AlunoController -> AlunoService : criar(dados)
 AlunoService -> AlunoService : validar dados
-AlunoService -> BD : buscar instituição pelo id
-BD --> AlunoService : instituição
-AlunoService -> AlunoClasse : instituicao = instituição selecionada
-AlunoService -> BD : salvar aluno
-BD --> AlunoService : ok
-AlunoService --> AlunoController : aluno
-AlunoController --> Frontend : 
+alt campo obrigatório ausente (inclusive instituicaoId)
+  AlunoService --> AlunoController : AppError 400 "O campo <campo> é obrigatório"
+  AlunoController --> Frontend : 400 { erro }
+else dados válidos
+  AlunoService -> InstituicaoRepository : buscarPorId(instituicaoId)
+  InstituicaoRepository -> BD : buscar instituição pelo id
+  BD --> InstituicaoRepository : instituição ou nulo
+  InstituicaoRepository --> AlunoService : instituição ou nulo
+  alt instituição não encontrada
+    AlunoService --> AlunoController : AppError 404 "Instituição não encontrada"
+    AlunoController --> Frontend : 404 { erro }
+  else instituição encontrada
+    AlunoService -> AlunoClasse : instituicao = instituição selecionada
+    AlunoService -> AlunoRepository : salvar(aluno)
+    AlunoRepository -> BD : salvar aluno
+    alt e-mail, CPF ou CNPJ já cadastrado (índice único)
+      BD --> AlunoRepository : erro 23505
+      AlunoRepository --> AlunoService : erro 23505
+      AlunoService --> AlunoController : erro 23505
+      AlunoController --> Frontend : 409 "Já existe um cadastro com esse email, CPF ou CNPJ"
+    else aluno salvo
+      BD --> AlunoRepository : ok
+      AlunoRepository --> AlunoService : aluno
+      AlunoService --> AlunoController : aluno
+      AlunoController --> Frontend : 201 Created (aluno)
+    end
+  end
+end
 @enduml
