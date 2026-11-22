@@ -83,7 +83,7 @@ O projeto está **em desenvolvimento**. A tabela mostra a situação de cada req
 | Envio de moedas com motivo obrigatório | ✅ Implementado | Débito, crédito e registro numa única transação do banco; telas e API |
 | Notificação por e-mail (professor e aluno) | ✅ Implementado | Um template para o professor e outro para o aluno; em desenvolvimento usa o Ethereal (ver [E-mail](#-e-mail)) |
 | Extrato de professores e alunos | ✅ Implementado | Saldo e movimentações; preparado para incluir as trocas por vantagens |
-| Resgate de vantagens com cupom e código por e-mail | ⏳ Pendente | |
+| Resgate de vantagens com cupom e código por e-mail | ✅ Implementado | O aluno troca moedas por uma vantagem; o sistema gera um código e envia o **mesmo código** por e-mail ao aluno (cupom) e à empresa (confirmação). A troca aparece no extrato |
 | Login e autenticação | ✅ Implementado | Login com JWT; cada rota exige o perfil certo, e aluno e empresa só acessam o próprio cadastro (veja [Permissões por perfil](#-permissões-por-perfil)) |
 
 ---
@@ -194,6 +194,7 @@ Quem bloqueia é a API: o front-end só esconde do menu o que o perfil não pode
 | Catálogo de vantagens | | ✅ | ✅ | |
 | Enviar moedas | | | ✅ | |
 | Extrato e saldo | | ✅ | ✅ | |
+| Trocar moedas por uma vantagem | | ✅ | | |
 | Cadastrar, editar, ativar/desativar e excluir as **próprias** vantagens | | | | ✅ |
 
 Professores não têm cadastro próprio: vêm da lista enviada pelas instituições.
@@ -222,6 +223,7 @@ Rotas marcadas com 🔒 exigem o cabeçalho `Authorization: Bearer <token>` devo
 | `POST` | `/moedas/enviar` | 🔒 Professor | Envia moedas a um aluno (`alunoId`, `valor`, `motivo`); o professor vem do token |
 | `GET` | `/moedas/saldo` | 🔒 Professor e aluno | Saldo de quem está logado |
 | `GET` | `/moedas/extrato` | 🔒 Professor e aluno | Saldo e movimentações de quem está logado |
+| `POST` | `/resgates` | 🔒 Aluno | Troca moedas por uma vantagem (`vantagemId`); o aluno vem do token. Devolve o `codigo` do cupom e o novo saldo, e envia o mesmo código por e-mail ao aluno e à empresa |
 | `GET` | `/vantagens` | 🔒 Aluno e professor | Catálogo das vantagens ativas, da mais barata para a mais cara |
 | `GET` | `/vantagens/minhas` | 🔒 Empresa | Vantagens da empresa logada, inclusive as inativas |
 | `POST` | `/vantagens` | 🔒 Empresa | Cadastra vantagem (`nome`, `descricao`, `custoMoedas`, `foto`); a empresa vem do token |
@@ -308,6 +310,8 @@ JWT_EXPIRES_IN=8h
 #### 📧 E-mail
 
 A cada envio de moedas o sistema manda dois e-mails: uma **confirmação para o professor** e um **aviso de recebimento para o aluno**, cada um com o seu template (`backend/src/templates/email/`).
+
+A cada troca de vantagem também são dois e-mails, ambos com o **mesmo código** gerado pelo sistema (ex.: `K7QF-M3XA`): o **cupom para o aluno** e a **confirmação para a empresa parceira**, que confere o código na troca presencial.
 
 * **Sem configurar nada**, o back-end usa o [Ethereal](https://ethereal.email/), um servidor de testes. Os e-mails não chegam a ninguém: o terminal do back-end mostra um link de pré-visualização para cada mensagem. É preciso ter internet.
 * **Para enviar de verdade**, preencha `SMTP_HOST` (e `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`) no `backend/.env`. Com Gmail, use uma senha de app.
