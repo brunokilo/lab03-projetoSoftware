@@ -4,19 +4,38 @@ title UC03 — Selecionar vantagem
 participant Frontend
 participant VantagemController
 participant VantagemService
+participant VantagemRepository
 participant "Banco de dados" as BD
 
-Frontend -> VantagemController : 
-VantagemController -> VantagemService : listarAtivas()
-VantagemService -> BD : buscar vantagens ativas
-BD --> VantagemService : lista de vantagens
-VantagemService --> VantagemController : lista de vantagens
-VantagemController --> Frontend : 200 OK (lista)
+Frontend -> VantagemController : GET /vantagens
+alt token ausente, expirado ou inválido
+  VantagemController --> Frontend : 401 { erro }
+else perfil sem permissão (não é aluno nem professor)
+  VantagemController --> Frontend : 403 { erro }
+else autorizado
+  VantagemController -> VantagemService : listarCatalogo()
+  VantagemService -> VantagemRepository : listarAtivas()
+  VantagemRepository -> BD : buscar vantagens ativas
+  BD --> VantagemRepository : lista de vantagens
+  VantagemRepository --> VantagemService : lista de vantagens
+  VantagemService --> VantagemController : lista de vantagens
+  VantagemController --> Frontend : 200 OK (lista)
+end
 
-Frontend -> VantagemController : 
+Frontend -> VantagemController : seleciona uma vantagem (id)
 VantagemController -> VantagemService : buscar(id)
-VantagemService -> BD : buscar vantagem pelo id
-BD --> VantagemService : vantagem
-VantagemService --> VantagemController : vantagem (descrição, foto, custo em moedas)
-VantagemController --> Frontend : 
+VantagemService -> VantagemRepository : buscarPorId(id)
+VantagemRepository -> BD : buscar vantagem pelo id
+BD --> VantagemRepository : vantagem ou nulo
+VantagemRepository --> VantagemService : vantagem ou nulo
+alt id não é um UUID válido
+  VantagemService --> VantagemController : erro de id inválido
+  VantagemController --> Frontend : 400 { erro }
+else vantagem não encontrada
+  VantagemService --> VantagemController : AppError 404 "Vantagem não encontrada"
+  VantagemController --> Frontend : 404 { erro }
+else vantagem encontrada
+  VantagemService --> VantagemController : vantagem (descrição, foto, custo em moedas)
+  VantagemController --> Frontend : 200 OK (vantagem)
+end
 @enduml
