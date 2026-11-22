@@ -10,6 +10,7 @@ import { Vantagem } from "./entities/Vantagem";
 import { ContaMoedas } from "./entities/ContaMoedas";
 import { Transacao } from "./entities/Transacao";
 import { TransacaoEnvio } from "./entities/TransacaoEnvio";
+import { Resgate } from "./entities/Resgate";
 
 export const AppDataSource = new DataSource({
   type: "postgres",
@@ -18,6 +19,6 @@ export const AppDataSource = new DataSource({
   username: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
-  entities: [InstituicaoEnsino, Endereco, Aluno, Professor, Empresa, Vantagem, ContaMoedas, Transacao, TransacaoEnvio],
+  entities: [InstituicaoEnsino, Endereco, Aluno, Professor, Empresa, Vantagem, ContaMoedas, Transacao, TransacaoEnvio, Resgate],
   synchronize: true,
 });
