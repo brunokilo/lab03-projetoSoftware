@@ -52,6 +52,11 @@ export function destaque(texto: string): string {
   return `<p style="margin:0 0 20px;padding:14px 18px;background:#fff4db;border:1px solid #fedf89;border-radius:8px;font-size:22px;font-weight:700;color:#7a4d00;">${escapar(texto)}</p>`;
 }
 
+// Código do cupom de troca, em destaque e em fonte monoespaçada
+export function codigoCupom(codigo: string): string {
+  return `<p style="margin:0 0 20px;padding:14px 18px;background:#edf2ff;border:1px dashed #3b5bdb;border-radius:8px;font-family:Consolas,'Courier New',monospace;font-size:26px;font-weight:700;letter-spacing:3px;text-align:center;color:#1c2f8f;">${escapar(codigo)}</p>`;
+}
+
 // Mensagem escrita pelo professor, em destaque e com as quebras de linha preservadas
 export function citacao(texto: string): string {
   return `<blockquote style="margin:0 0 20px;padding:12px 16px;border-left:4px solid #3b5bdb;background:#edf2ff;white-space:pre-wrap;">${escapar(texto)}</blockquote>`;

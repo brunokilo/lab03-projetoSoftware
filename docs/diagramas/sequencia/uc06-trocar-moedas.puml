@@ -18,6 +18,10 @@ else perfil sem permissão (não é aluno)
   ResgateController --> Frontend : 403 { erro }
 else autorizado
   ResgateController -> ResgateService : resgatar(alunoId, vantagemId)
+  alt vantagemId ausente
+    ResgateService --> ResgateController : AppError 400 "O campo vantagemId é obrigatório"
+    ResgateController --> Frontend : 400 { erro }
+  end
 
   ResgateService -> AlunoRepository : buscarPorId(alunoId)
   AlunoRepository -> BD : buscar aluno
@@ -37,10 +41,10 @@ else autorizado
     else vantagem encontrada
       ResgateService -> ResgateService : validar vantagem ativa e saldo
       alt vantagem inativa
-        ResgateService --> ResgateController : AppError 400 "Vantagem indisponível"
+        ResgateService --> ResgateController : AppError 400 "Essa vantagem não está mais disponível"
         ResgateController --> Frontend : 400 { erro }
       else saldo insuficiente
-        ResgateService --> ResgateController : AppError 400 "Saldo insuficiente para trocar essa vantagem"
+        ResgateService --> ResgateController : AppError 400 "Saldo insuficiente para trocar por essa vantagem"
         ResgateController --> Frontend : 400 { erro }
       else vantagem ativa e saldo suficiente
         ResgateService -> AlunoClasse : conta.debitar(custoMoedas)
@@ -49,7 +53,7 @@ else autorizado
         ResgateRepository -> BD : salvar conta e registrar resgate (código do cupom)
         BD --> ResgateRepository : ok
         ResgateRepository --> ResgateService : resgate (código do cupom)
-        ResgateService -> EmailService : notificarResgate()
+        ResgateService -> EmailService : notificarResgate() (mesmo código para o aluno e para a empresa)
         ResgateService --> ResgateController : resgate (código do cupom)
         ResgateController --> Frontend : 201 Created (resgate)
       end

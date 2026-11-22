@@ -5,6 +5,7 @@ import { InstituicaoController } from "../controllers/InstituicaoController";
 import { AuthController } from "../controllers/AuthController";
 import { MoedaController } from "../controllers/MoedaController";
 import { VantagemController } from "../controllers/VantagemController";
+import { ResgateController } from "../controllers/ResgateController";
 import { ResumoController } from "../controllers/ResumoController";
 import { autenticar, exigirPerfil, exigirProprioCadastro } from "../middlewares/autenticar";
 
@@ -43,6 +44,9 @@ const moedas = new MoedaController();
 routes.post("/moedas/enviar", autenticar, exigirPerfil("professor"), moedas.enviar);
 routes.get("/moedas/extrato", autenticar, exigirPerfil("professor", "aluno"), moedas.extrato);
 routes.get("/moedas/saldo", autenticar, exigirPerfil("professor", "aluno"), moedas.saldo);
+
+const resgates = new ResgateController();
+routes.post("/resgates", autenticar, exigirPerfil("aluno"), resgates.resgatar);
 
 const resumo = new ResumoController();
 routes.get("/resumo", autenticar, resumo.gerar);

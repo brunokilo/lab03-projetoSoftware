@@ -1,16 +1,18 @@
 import { useEffect, useState } from "react";
 import { api } from "../api";
-import type { Perfil, Vantagem } from "../types";
+import type { Perfil, ResgateRealizado, TipoAviso, Vantagem } from "../types";
 import { exibirMoedas, normalizar } from "../utils/formatos";
 import CartaoVantagem from "../components/CartaoVantagem";
 import EstadoVazio from "../components/EstadoVazio";
 import Icone from "../components/Icone";
+import TrocaVantagem from "../components/TrocaVantagem";
 
 // Catálogo das vantagens ativas das empresas parceiras. Para o aluno, mostra se o saldo já é suficiente
-export default function Vantagens({ perfil }: { perfil: Perfil }) {
+export default function Vantagens({ perfil, notificar }: { perfil: Perfil; notificar: (tipo: TipoAviso, mensagem: string) => void }) {
   const aluno = perfil === "aluno";
   const [vantagens, setVantagens] = useState<Vantagem[] | null>(null);
   const [saldo, setSaldo] = useState<number | null>(null);
+  const [trocando, setTrocando] = useState<Vantagem | null>(null);
   const [erro, setErro] = useState("");
   const [busca, setBusca] = useState("");
 
@@ -52,7 +54,10 @@ export default function Vantagens({ perfil }: { perfil: Perfil }) {
       {aluno && (
         <div className="nota">
           <Icone nome="presente" />
-          <span>A troca de moedas pelas vantagens chega na próxima etapa do sistema, com o cupom enviado por e-mail.</span>
+          <span>
+            Ao trocar uma vantagem, você recebe um cupom por e-mail com um código, e a empresa recebe o mesmo código
+            para conferir a troca presencialmente.
+          </span>
         </div>
       )}
 
@@ -95,15 +100,38 @@ export default function Vantagens({ perfil }: { perfil: Perfil }) {
               {filtradas.map((v) => (
                 <CartaoVantagem key={v.id} vantagem={v} mostrarEmpresa>
                   {aluno && saldo !== null && (
-                    <span className={`vantagem-alcance${saldo >= v.custoMoedas ? " suficiente" : ""}`}>
-                      {saldo >= v.custoMoedas ? "Saldo suficiente" : `Faltam ${exibirMoedas(v.custoMoedas - saldo)}`}
-                    </span>
+                    <>
+                      <button
+                        type="button"
+                        className="botao botao-primario"
+                        onClick={() => setTrocando(v)}
+                        disabled={saldo < v.custoMoedas}
+                      >
+                        <Icone nome="presente" tamanho={16} />
+                        Trocar
+                      </button>
+                      <span className={`vantagem-alcance${saldo >= v.custoMoedas ? " suficiente" : ""}`}>
+                        {saldo >= v.custoMoedas ? "Saldo suficiente" : `Faltam ${exibirMoedas(v.custoMoedas - saldo)}`}
+                      </span>
+                    </>
                   )}
                 </CartaoVantagem>
               ))}
             </div>
           )}
         </>
+      )}
+
+      {trocando && saldo !== null && (
+        <TrocaVantagem
+          vantagem={trocando}
+          saldo={saldo}
+          aoTrocar={(r: ResgateRealizado) => {
+            setSaldo(r.saldoAluno);
+            notificar("sucesso", `${r.vantagem.nome} trocada! Código do cupom: ${r.codigo}.`);
+          }}
+          aoFechar={() => setTrocando(null)}
+        />
       )}
     </>
   );
