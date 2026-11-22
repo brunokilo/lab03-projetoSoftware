@@ -2,6 +2,8 @@ import nodemailer, { Transporter } from "nodemailer";
 import { EmailMontado } from "../templates/email/base";
 import { confirmacaoEnvioProfessor } from "../templates/email/confirmacaoEnvioProfessor";
 import { recebimentoAluno } from "../templates/email/recebimentoAluno";
+import { cupomAluno } from "../templates/email/cupomAluno";
+import { confirmacaoResgateEmpresa } from "../templates/email/confirmacaoResgateEmpresa";
 
 export interface DadosEnvioMoedas {
   professor: { nome: string; email: string };
@@ -9,6 +11,16 @@ export interface DadosEnvioMoedas {
   valor: number;
   motivo: string;
   saldoProfessor: number;
+  saldoAluno: number;
+}
+
+export interface DadosResgate {
+  codigo: string;
+  vantagem: string;
+  descricao: string;
+  custo: number;
+  aluno: { nome: string; email: string };
+  empresa: { nome: string; email: string };
   saldoAluno: number;
 }
 
@@ -43,6 +55,35 @@ export class EmailService {
     const resultados = await Promise.allSettled([
       this.enviar(d.professor.email, paraProfessor, "professor"),
       this.enviar(d.aluno.email, paraAluno, "aluno"),
+    ]);
+    for (const r of resultados) {
+      if (r.status === "rejected") console.error("Falha ao enviar e-mail:", r.reason);
+    }
+  }
+
+  // Aluno e empresa recebem o MESMO código, para a troca ser conferida presencialmente
+  async notificarResgate(d: DadosResgate) {
+    const paraAluno = cupomAluno({
+      aluno: d.aluno.nome,
+      vantagem: d.vantagem,
+      descricao: d.descricao,
+      empresa: d.empresa.nome,
+      custo: d.custo,
+      codigo: d.codigo,
+      saldoAtual: d.saldoAluno,
+    });
+    const paraEmpresa = confirmacaoResgateEmpresa({
+      empresa: d.empresa.nome,
+      aluno: d.aluno.nome,
+      vantagem: d.vantagem,
+      custo: d.custo,
+      codigo: d.codigo,
+    });
+
+    // Um e-mail com problema não impede o outro
+    const resultados = await Promise.allSettled([
+      this.enviar(d.aluno.email, paraAluno, "aluno"),
+      this.enviar(d.empresa.email, paraEmpresa, "empresa"),
     ]);
     for (const r of resultados) {
       if (r.status === "rejected") console.error("Falha ao enviar e-mail:", r.reason);
