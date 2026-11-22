@@ -4,25 +4,61 @@ title UC12 — Cadastrar aluno
 participant Frontend
 participant AlunoController
 participant AlunoService
+participant ContaRepository
+participant InstituicaoRepository
+participant AlunoRepository
 participant "Aluno" as AlunoClasse
 participant "ContaMoedas" as ContaClasse
 participant "Banco de dados" as BD
 
-Frontend -> AlunoController : 
+Frontend -> AlunoController : POST /alunos
 AlunoController -> AlunoService : criar(dados)
 AlunoService -> AlunoService : validar campos obrigatórios
-AlunoService -> AlunoService : validar endereço (rua, número, bairro, cidade, estado, cep)
-AlunoService -> BD : verificar se o e-mail já está em uso
-BD --> AlunoService : e-mail livre
-AlunoService -> AlunoClasse : new Aluno()
-AlunoService -> AlunoClasse : preencher dados e senha (bcrypt.hash)
-AlunoService -> BD : buscar instituição pelo id
-BD --> AlunoService : instituição
-AlunoService -> AlunoClasse : instituicao = instituição selecionada
-AlunoService -> ContaClasse : new ContaMoedas()
-AlunoService -> AlunoClasse : conta = nova conta (saldo 0)
-AlunoService -> BD : salvar aluno (com endereço e conta)
-BD --> AlunoService : aluno salvo
-AlunoService --> AlunoController : aluno (sem senha)
-AlunoController --> Frontend : 
+alt campo obrigatório ausente
+  AlunoService --> AlunoController : AppError 400 "O campo <campo> é obrigatório"
+  AlunoController --> Frontend : 400 { erro }
+else campos preenchidos
+  AlunoService -> AlunoService : validar endereço (rua, número, bairro, cidade, estado, cep)
+  alt campo do endereço ausente
+    AlunoService --> AlunoController : AppError 400 "O campo endereco.<campo> é obrigatório"
+    AlunoController --> Frontend : 400 { erro }
+  else endereço válido
+    AlunoService -> ContaRepository : emailEmUsoEmOutroPerfil(email, "aluno")
+    ContaRepository -> BD : verificar se o e-mail já está em uso (professor, empresa)
+    BD --> ContaRepository : total
+    ContaRepository --> AlunoService : e-mail em uso ou livre
+    alt e-mail já usado por professor ou empresa
+      AlunoService --> AlunoController : AppError 409 "Já existe um cadastro com esse email"
+      AlunoController --> Frontend : 409 { erro }
+    else e-mail livre
+      AlunoService -> AlunoClasse : new Aluno()
+      AlunoService -> AlunoClasse : preencher dados e senha (bcrypt.hash)
+      AlunoService -> InstituicaoRepository : buscarPorId(instituicaoId)
+      InstituicaoRepository -> BD : buscar instituição pelo id
+      BD --> InstituicaoRepository : instituição ou nulo
+      InstituicaoRepository --> AlunoService : instituição ou nulo
+      alt instituição não encontrada
+        AlunoService --> AlunoController : AppError 404 "Instituição não encontrada"
+        AlunoController --> Frontend : 404 { erro }
+      else instituição encontrada
+        AlunoService -> AlunoClasse : instituicao = instituição selecionada
+        AlunoService -> ContaClasse : new ContaMoedas()
+        AlunoService -> AlunoClasse : conta = nova conta (saldo 0)
+        AlunoService -> AlunoRepository : salvar(aluno)
+        AlunoRepository -> BD : salvar aluno (com endereço e conta)
+        alt e-mail, CPF ou CNPJ já cadastrado (índice único)
+          BD --> AlunoRepository : erro 23505
+          AlunoRepository --> AlunoService : erro 23505
+          AlunoService --> AlunoController : erro 23505
+          AlunoController --> Frontend : 409 "Já existe um cadastro com esse email, CPF ou CNPJ"
+        else aluno salvo
+          BD --> AlunoRepository : aluno salvo
+          AlunoRepository --> AlunoService : aluno salvo
+          AlunoService --> AlunoController : aluno (sem senha)
+          AlunoController --> Frontend : 201 Created (aluno)
+        end
+      end
+    end
+  end
+end
 @enduml
