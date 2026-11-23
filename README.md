@@ -29,6 +29,7 @@
   - [Banco de Dados (Docker Compose)](#-banco-de-dados-docker-compose)
   - [Back-end](#-back-end)
   - [Front-end](#-front-end)
+- [Deploy na Railway](#-deploy-na-railway)
 - [Estrutura de Pastas](#-estrutura-de-pastas)
 - [Testes](#-testes)
 - [Documentação do Projeto](#-documentação-do-projeto)
@@ -384,7 +385,46 @@ A aplicação fica disponível em **http://localhost:5173**.
 | `npm run dev` | Servidor de desenvolvimento do Vite |
 | `npm run build` | Verifica os tipos e gera o build de produção em `dist/` |
 | `npm run preview` | Serve o build de produção localmente |
+| `npm start` | Serve o build de `dist/` na porta `PORT` (usado no deploy) |
 | `npm run lint` | Executa o oxlint |
+
+---
+
+## 🚀 Deploy na Railway
+
+O projeto sobe na [Railway](https://railway.com) como três serviços no mesmo projeto: o banco, a API e o front-end. Os dois últimos vêm deste repositório, cada um com a sua pasta.
+
+### 1. Banco de dados
+
+No projeto da Railway: **New › Database › PostgreSQL**.
+
+### 2. API (`backend`)
+
+**New › GitHub Repo** com este repositório, e em **Settings › Source › Root Directory** use `/backend`. A Railway roda `npm ci`, `npm run build` e `npm start`.
+
+| Variável | Valor |
+| :--- | :--- |
+| `DATABASE_URL` | `${{Postgres.DATABASE_URL}}` (referência ao banco do passo 1) |
+| `JWT_SECRET` | Uma sequência aleatória longa (ex.: `openssl rand -hex 32`) |
+| `UPLOADS_DIR` | `/data` |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM` | Opcionais. Sem elas, os e-mails vão para o Ethereal (só pré-visualização, ninguém recebe) |
+
+Ainda na API:
+
+- **Volume:** clique com o botão direito no serviço › **Attach Volume**, com o caminho de montagem `/data`. É onde ficam as fotos das vantagens; sem volume, elas somem a cada deploy.
+- **Domínio:** em **Settings › Networking › Generate Domain**, gere o endereço público da API.
+
+As tabelas, as instituições e os professores são criados sozinhos na primeira inicialização.
+
+### 3. Front-end (`frontend`)
+
+Outro **New › GitHub Repo** com o mesmo repositório, agora com **Root Directory** `/frontend`.
+
+| Variável | Valor |
+| :--- | :--- |
+| `VITE_API_URL` | O domínio da API com `https://`, sem barra no fim (ex.: `https://moeda-api.up.railway.app`) |
+
+O `VITE_API_URL` é lido no build, então qualquer mudança nele exige um novo deploy do front-end. Depois, gere o domínio do front-end em **Settings › Networking › Generate Domain**: esse é o endereço do sistema.
 
 ---
 

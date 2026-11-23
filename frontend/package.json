@@ -7,11 +7,16 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "start": "serve -s dist -l tcp://0.0.0.0:${PORT:-3000}"
+  },
+  "engines": {
+    "node": ">=22"
   },
   "dependencies": {
     "react": "^19.2.8",
-    "react-dom": "^19.2.8"
+    "react-dom": "^19.2.8",
+    "serve": "^14.2.4"
   },
   "devDependencies": {
     "@types/node": "^24.13.3",
