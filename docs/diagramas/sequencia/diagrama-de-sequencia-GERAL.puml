@@ -1,0 +1,107 @@
+@startuml diagrama_de_sequencia_geral
+title Diagrama de Sequência Geral — Ciclo completo da moeda estudantil
+autonumber
+hide footbox
+skinparam responseMessageBelowArrow true
+skinparam sequenceGroupBodyBackgroundColor transparent
+
+actor "Instituição" as I
+actor Professor as P
+actor Aluno as A
+actor Empresa as E
+actor "Relógio" as R <<sistema externo>>
+participant "Frontend" as F
+participant "Backend (API)" as B
+database "Banco de dados" as BD
+actor "Serviço de e-mail" as M <<sistema externo>>
+
+== 1. Professores pré-cadastrados e crédito do semestre (UC09, UC13) ==
+I -> B : envia a lista de professores na parceria
+B -> BD : na primeira inicialização, salva cada professor\ncom conta de moedas e 1.000 moedas
+R -> B : servidor inicia e, depois, verificação diária
+B -> BD : credita 1.000 moedas a quem ainda não recebeu no semestre\n(somadas ao saldo que sobrou)
+BD --> B : saldos atualizados
+
+== 2. Cadastro de aluno e de empresa (UC12, UC02, UC10) ==
+A -> F : abre "Criar conta de aluno"
+F -> B : GET /instituicoes
+B -> BD : busca as instituições participantes
+BD --> B : instituições
+B --> F : lista de instituições
+A -> F : preenche os dados e seleciona a instituição
+F -> B : POST /alunos
+B -> BD : salva aluno com conta de moedas (saldo 0)
+B --> F : aluno cadastrado
+F --> A : "Cadastro realizado", segue para o login
+
+E -> F : preenche os dados da empresa parceira
+F -> B : POST /empresas
+B -> BD : salva empresa
+B --> F : empresa cadastrada
+F --> E : "Empresa cadastrada", segue para o login
+
+== 3. Login de aluno, professor ou empresa (UC01) ==
+P -> F : informa e-mail e senha
+F -> B : POST /login
+B -> BD : busca o usuário pelo e-mail
+BD --> B : usuário e hash da senha
+B -> B : confere a senha (bcrypt) e gera o token (JWT) com o perfil
+B --> F : token e dados do usuário
+F --> P : painel com o menu do perfil
+
+== 4. A empresa oferece vantagens (UC11) — requisições com token de empresa ==
+E -> F : cadastra vantagem (nome, descrição, foto e custo em moedas)
+F -> B : POST /vantagens
+B -> BD : salva a foto e a vantagem como ativa
+B --> F : vantagem cadastrada
+F --> E : vantagem disponível no catálogo
+
+== 5. O professor reconhece o aluno (UC04, UC05) — requisições com token de professor ==
+P -> F : escolhe o aluno, a quantidade de moedas e o motivo
+F -> B : POST /moedas/enviar
+alt saldo do professor insuficiente
+  B --> F : erro 400 (nenhum saldo é alterado)
+  F --> P : "Saldo insuficiente"
+else saldo suficiente
+  B -> BD : debita o professor, credita o aluno\ne registra o envio (numa única transação)
+  BD --> B : ok
+  B --> F : envio realizado e novo saldo
+  F --> P : "Moedas enviadas"
+  B ->> M : avisa o professor e o aluno (em segundo plano)
+  M -->> P : e-mail de confirmação do envio
+  M -->> A : e-mail avisando que recebeu moedas
+end
+
+== 6. Consulta do extrato e do catálogo (UC08, UC03) — o professor também consulta o próprio extrato ==
+A -> F : abre o extrato
+F -> B : GET /moedas/extrato
+B -> BD : busca saldo e movimentações do aluno
+BD --> B : saldo e movimentações
+B --> F : extrato
+F --> A : saldo atual e histórico
+
+A -> F : abre o catálogo de vantagens
+F -> B : GET /vantagens
+B -> BD : busca as vantagens ativas
+BD --> B : vantagens
+B --> F : catálogo
+F --> A : vantagens das empresas parceiras com o custo em moedas
+
+== 7. O aluno troca moedas por uma vantagem (UC06) — requisições com token de aluno ==
+A -> F : escolhe a vantagem e confirma a troca
+F -> B : POST /resgates
+B -> BD : busca a vantagem e trava a conta do aluno
+alt vantagem inativa ou saldo insuficiente
+  B --> F : erro 400 (nenhum saldo é alterado)
+  F --> A : mensagem de erro
+else troca permitida
+  B -> B : gera o código do cupom
+  B -> BD : debita o aluno e registra o resgate com o código\n(numa única transação)
+  BD --> B : ok
+  B --> F : resgate realizado (código do cupom e novo saldo)
+  F --> A : mostra o código do cupom
+  B ->> M : envia o mesmo código ao aluno e à empresa (em segundo plano)
+  M -->> A : e-mail com o cupom para a troca presencial
+  M -->> E : e-mail com o mesmo código para conferir a troca
+end
+@enduml
