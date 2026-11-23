@@ -13,3 +13,7 @@ Contribuição: Implementei o login de professor e aluno e implementei o etherea
 # Semana 4
 
 Contribuição: Fiz os diagramas de sequencia dos casos de uso do aluno.
+
+# Semana 5 
+
+Contribuição: Fiz a implementação do resgate de vantagens por parte dos alunos, agora os alunos podem resgatar vantagens previamente cadastradas pelas empresas.
