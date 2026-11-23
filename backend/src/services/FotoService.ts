@@ -3,8 +3,9 @@ import { mkdir, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { AppError } from "../errors/AppError";
 
-// Pasta servida pela API em /uploads (fica em backend/uploads, fora do controle de versão)
-export const PASTA_UPLOADS = path.resolve(__dirname, "../../uploads");
+// Pasta servida pela API em /uploads: backend/uploads (fora do Git) ou, em produção, UPLOADS_DIR,
+// que aponta para um volume persistente (o disco do container é apagado a cada deploy)
+export const PASTA_UPLOADS = path.resolve(process.env.UPLOADS_DIR || path.join(__dirname, "../../uploads"));
 
 const TAMANHO_MAXIMO = 2 * 1024 * 1024;
 
