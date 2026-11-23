@@ -1,0 +1,74 @@
+@startuml
+title Diagrama de Implantação · Sistema de Moeda Estudantil na Railway
+
+skinparam shadowing false
+skinparam defaultTextAlignment center
+skinparam nodesep 60
+skinparam ranksep 90
+skinparam node {
+  BackgroundColor #FEFEFE
+  BorderColor #333333
+}
+skinparam artifact {
+  BackgroundColor #F7F7F7
+  BorderColor #333333
+}
+skinparam database {
+  BackgroundColor #F7F7F7
+  BorderColor #333333
+}
+skinparam storage {
+  BackgroundColor #F7F7F7
+  BorderColor #333333
+}
+skinparam cloud {
+  BackgroundColor #FBFBFB
+  BorderColor #777777
+}
+
+node "Computador ou celular do usuário" <<device>> as Dispositivo {
+  node "Navegador web" <<execution environment>> as Navegador {
+    artifact "Aplicação React (SPA)" as Spa
+  }
+}
+
+cloud "Railway · projeto grateful-tranquility · ambiente production" as Railway {
+
+  node "Serviço frontend" <<container>> as ServicoFront {
+    node "Node.js 22" <<execution environment>> as NodeFront {
+      artifact "serve" as Serve
+      artifact "dist/\n(build do Vite)" as Dist
+    }
+  }
+
+  node "Serviço api" <<container>> as ServicoApi {
+    node "Node.js 22" <<execution environment>> as NodeApi {
+      artifact "API Express\n(dist/index.js)" as Api
+    }
+    storage "Volume /data\n(fotos das vantagens)" as VolumeApi
+  }
+
+  node "Serviço Postgres" <<container>> as ServicoBanco {
+    database "PostgreSQL 18\n(banco railway)" as Banco
+    storage "Volume\n/var/lib/postgresql/data" as VolumeBanco
+  }
+}
+
+node "GitHub\nbrunokilo/lab03-projetoSoftware" <<repositório>> as GitHub
+node "ViaCEP" <<serviço externo>> as ViaCep
+node "Servidor de e-mail\n(SMTP / Ethereal)" <<serviço externo>> as Email
+
+Serve ..> Dist : serve os arquivos
+
+Navegador --> ServicoFront : HTTPS, baixa a aplicação\nfrontend-production-5448b8f4.up.railway.app
+Navegador --> ServicoApi : HTTPS + JSON, token JWT\nlab03-projetosoftware-production.up.railway.app
+Navegador --> ViaCep : HTTPS\nconsulta de CEP
+
+Api --> Banco : TCP 5432, rede privada\npostgres.railway.internal
+Api --> VolumeApi : grava e lê as fotos
+Banco --> VolumeBanco : dados
+Api .down.> Email : SMTP\n(bloqueado pela Railway no plano atual)
+
+GitHub .up.> ServicoFront : build Railpack a cada push na main\n(pasta /frontend)
+GitHub .up.> ServicoApi : build Railpack a cada push na main\n(pasta /backend)
+@enduml

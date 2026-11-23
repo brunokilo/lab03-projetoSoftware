@@ -166,6 +166,12 @@ Os diagramas ficam em [`docs/diagramas`](./docs/diagramas). Os arquivos-fonte `.
 | **Diagrama Entidade-Relacionamento** | **Diagrama de Componentes** |
 | <img src="docs/diagramas/der.png" alt="Diagrama Entidade-Relacionamento" width="400px"> | <img src="docs/diagramas/diagrama%20de%20componentes.png" alt="Diagrama de Componentes" width="400px"> |
 
+#### Diagrama de implantação
+
+Como o sistema roda na Railway: o front-end e a API em serviços separados com Node.js 22, o PostgreSQL acessado pela rede privada, os volumes das fotos e do banco, e os serviços externos (ViaCEP, chamado pelo navegador, e o servidor de e-mail). Cada push na `main` gera um novo build dos dois serviços.
+
+<img src="docs/diagramas/diagrama-de-implantacao.png" alt="Diagrama de implantação na Railway" width="800px">
+
 #### Diagramas de sequência
 
 Um diagrama para cada caso de uso de professor, empresa, instituição e dos sistemas externos, feito a partir do código atual. Ficam em [`docs/diagramas/sequencia`](./docs/diagramas/sequencia).
