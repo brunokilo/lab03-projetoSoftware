@@ -12,8 +12,10 @@ import { Transacao } from "./entities/Transacao";
 import { TransacaoEnvio } from "./entities/TransacaoEnvio";
 import { Resgate } from "./entities/Resgate";
 
+// Em produção (Railway) a conexão chega pronta em DATABASE_URL; localmente vale DB_HOST, DB_PORT etc. do .env
 export const AppDataSource = new DataSource({
   type: "postgres",
+  url: process.env.DATABASE_URL,
   host: process.env.DB_HOST,
   port: Number(process.env.DB_PORT),
   username: process.env.DB_USER,
