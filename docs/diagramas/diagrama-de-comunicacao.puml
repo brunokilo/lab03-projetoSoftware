@@ -1,0 +1,11 @@
+@startuml
+
+object ":Aluno" as Aluno
+object ":Professor" as Professor
+object ":Empresa" as Empresa
+object ":InstituicaoEnsino" as InstituicaoEnsino
+object ":Vantagem" as Vantagem
+object ":Transacao" as Transacao
+
+
+@enduml

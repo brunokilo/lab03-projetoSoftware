@@ -51,15 +51,6 @@ export default function Vantagens({ perfil, notificar }: { perfil: Perfil; notif
         )}
       </div>
 
-      {aluno && (
-        <div className="nota">
-          <Icone nome="presente" />
-          <span>
-            Ao trocar uma vantagem, você recebe um cupom por e-mail com um código, e a empresa recebe o mesmo código
-            para conferir a troca presencialmente.
-          </span>
-        </div>
-      )}
 
       {erro ? (
         <section className="cartao">
